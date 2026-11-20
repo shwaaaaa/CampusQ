@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h4 class="mb-3">Dashboard <small class="text-muted fs-6">(today)</small></h4>
+
+<div class="row text-center mb-4">
+  <div class="col-md-4"><div class="card border-warning"><div class="card-body">
+    <div class="display-6">{{ waiting }}</div>Waiting</div></div></div>
+  <div class="col-md-4"><div class="card border-primary"><div class="card-body">
+    <div class="display-6">{{ serving }}</div>Being served</div></div></div>
+  <div class="col-md-4"><div class="card border-success"><div class="card-body">
+    <div class="display-6">{{ served }}</div>Served</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">Services</div>
+  <table class="table mb-0">
+    <thead><tr><th>Service</th><th>Counter</th><th>Now serving</th><th>Waiting</th></tr></thead>
+    <tbody>
+    {% for s in services %}
+      <tr>
+        <td>{{ s.info.service_name }}</td>
+        <td>{{ s.info.counter }}</td>
+        <td>{% if s.current %}#{{ s.current.queue_number }} - {{ s.current.student_name }}{% else %}-{% endif %}</td>
+        <td>{{ s.waiting }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="text-muted">No services yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

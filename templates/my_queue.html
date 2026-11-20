@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}My Queue{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h4 class="mb-1">{{ student.name }}</h4>
+    <div class="text-muted mb-3">{{ student.student_id }} &middot; this page refreshes every 5 seconds</div>
+
+    {% for t in tickets %}
+    {% set e = t.entry %}
+    <div class="card shadow-sm mb-3 {{ 'border-primary' if e.status == 'serving' else '' }}">
+      <div class="card-body text-center">
+        <div class="text-muted">{{ e.service_name }} &middot; {{ e.counter }}</div>
+        <div class="display-3">#{{ e.queue_number }}</div>
+
+        {% if e.status == 'waiting' %}
+          <span class="badge text-bg-warning">waiting</span>
+          <div class="fs-5 mt-2">
+            {% if t.ahead == 0 %}You are next!{% else %}{{ t.ahead }} student{{ '' if t.ahead == 1 else 's' }} ahead of you{% endif %}
+          </div>
+        {% elif e.status == 'serving' %}
+          <span class="badge text-bg-primary">serving</span>
+          <div class="fs-5 mt-2">It's your turn! Please go to <strong>{{ e.counter }}</strong>.</div>
+        {% elif e.status == 'served' %}
+          <span class="badge text-bg-success">served</span>
+          <div class="mt-2">Done. Thank you!</div>
+        {% else %}
+          <span class="badge text-bg-secondary">{{ e.status }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">You have no queue numbers today.</div>
+    {% endfor %}
+
+    <a class="btn btn-outline-primary" href="{{ url_for('get_number') }}">Get another number</a>
+  </div>
+</div>
+<script>setTimeout(function () { location.reload(); }, 5000);</script>
+{% endblock %}

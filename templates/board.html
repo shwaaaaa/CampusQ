@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Now Serving{% endblock %}
+{% block content %}
+<h3 class="mb-3 text-center">Now Serving</h3>
+<div class="row g-3">
+  {% for s in services %}
+  <div class="col-md-6 col-lg-3">
+    <div class="card text-center h-100 {{ 'border-primary' if s.current else '' }}">
+      <div class="card-header">{{ s.info.service_name }}<br><small class="text-muted">{{ s.info.counter }}</small></div>
+      <div class="card-body">
+        <div class="display-1">{% if s.current %}#{{ s.current.queue_number }}{% else %}-{% endif %}</div>
+        <div class="text-muted mt-2">Waiting: {{ s.waiting }}</div>
+        {% if s.next %}<div class="small mt-1">Next: {% for n in s.next %}#{{ n }}{{ ', ' if not loop.last else '' }}{% endfor %}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<div class="text-center text-muted mt-4">Updates every 5 seconds</div>
+<script>setTimeout(function () { location.reload(); }, 5000);</script>
+{% endblock %}
