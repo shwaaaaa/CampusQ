@@ -1,41 +1,192 @@
+
 {% extends "base.html" %}
-{% block title %}Get a Queue Number{% endblock %}
+
+{% block title %}Get a Queue Number | CampusQ{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <h4 class="mb-3">Get a Queue Number</h4>
-        <form method="post">
-          <div class="mb-3">
-            <label class="form-label">Student ID</label>
-            <input name="student_id" class="form-control" placeholder="e.g. 2024-0001" required autofocus>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Service</label>
-            <select name="service_id" class="form-select" required>
-              {% for s in services %}
-              <option value="{{ s.service_id }}">{{ s.service_name }} ({{ s.counter }})</option>
-              {% endfor %}
-            </select>
-          </div>
-          <button class="btn btn-success w-100">Get queue number</button>
-        </form>
-      </div>
+<div class="student-panel">
+
+    <!-- WELCOME HEADER -->
+    <div class="student-welcome">
+        <div class="student-welcome-content">
+            <span class="student-eyebrow">STUDENT PORTAL</span>
+            <h1>Skip the Line.<br><span>Not Your Turn.</span></h1>
+            <p>
+                Welcome to CampusQ! Get your queue number, monitor your
+                position, and make your campus transactions easier.
+            </p>
+        </div>
+
+        <div class="student-welcome-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
     </div>
 
-    <div class="card shadow-sm mb-3">
-      <div class="card-body">
-        <h6>Already have a number?</h6>
-        <form method="get" action="{{ url_for('my_queue') }}" class="d-flex gap-2">
-          <input name="student_id" class="form-control" placeholder="Student ID" required>
-          <button class="btn btn-outline-primary">Check</button>
-        </form>
-      </div>
+    <!-- MAIN CONTENT -->
+    <div class="student-panel-grid">
+
+        <!-- GET QUEUE NUMBER -->
+        <div class="student-main-card">
+            <div class="student-card-heading">
+                <div class="student-card-icon">
+                    <i class="bi bi-ticket-perforated-fill"></i>
+                </div>
+
+                <div>
+                    <span class="student-card-eyebrow">JOIN THE QUEUE</span>
+                    <h2>Get a Queue Number</h2>
+                    <p>Enter your student information to get started.</p>
+                </div>
+            </div>
+
+            <form method="post" class="student-queue-form">
+
+                <div class="student-field">
+                    <label for="student_id">
+                        <i class="bi bi-person-badge"></i>
+                        Student ID
+                    </label>
+
+                    <input
+                        type="text"
+                        id="student_id"
+                        name="student_id"
+                        placeholder="e.g. 2024-0001"
+                        autocomplete="off"
+                        required
+                        autofocus
+                    >
+
+                    <small>Use your registered university student ID.</small>
+                </div>
+
+                <div class="student-field">
+                    <label for="service_id">
+                        <i class="bi bi-building"></i>
+                        Select a Service
+                    </label>
+
+                    <select id="service_id" name="service_id" required>
+                        <option value="" disabled selected>
+                            Choose the service you need
+                        </option>
+
+                        {% for s in services %}
+                        <option value="{{ s.service_id }}">
+                            {{ s.service_name }} — {{ s.counter }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+                    <small>Select the office or service you want to visit.</small>
+                </div>
+
+                <button type="submit" class="student-submit-btn">
+                    <span>Get Queue Number</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="student-form-note">
+                <i class="bi bi-info-circle"></i>
+                Please make sure your Student ID is correct before proceeding.
+            </div>
+        </div>
+
+        <!-- SIDE PANEL -->
+        <div class="student-side-panel">
+
+            <!-- CHECK QUEUE -->
+            <div class="student-side-card">
+                <div class="student-side-heading">
+                    <div class="student-side-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+
+                    <div>
+                        <h3>Already have a number?</h3>
+                        <p>Check your current queue status.</p>
+                    </div>
+                </div>
+
+                <form method="get" action="{{ url_for('my_queue') }}">
+                    <label for="check_student_id">Student ID</label>
+
+                    <div class="student-check-input">
+                        <input
+                            type="text"
+                            id="check_student_id"
+                            name="student_id"
+                            placeholder="Enter your Student ID"
+                            required
+                        >
+
+                        <button type="submit" aria-label="Check queue">
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- HOW IT WORKS -->
+            <div class="student-side-card student-guide-card">
+                <span class="student-card-eyebrow">QUICK GUIDE</span>
+                <h3>How it works</h3>
+
+                <div class="student-guide-steps">
+                    <div class="student-guide-step">
+                        <div class="student-step-number">01</div>
+                        <div>
+                            <strong>Enter your Student ID</strong>
+                            <p>Use your registered university ID.</p>
+                        </div>
+                    </div>
+
+                    <div class="student-guide-step">
+                        <div class="student-step-number">02</div>
+                        <div>
+                            <strong>Choose a service</strong>
+                            <p>Select the office you need to visit.</p>
+                        </div>
+                    </div>
+
+                    <div class="student-guide-step">
+                        <div class="student-step-number">03</div>
+                        <div>
+                            <strong>Get your queue number</strong>
+                            <p>Keep your number and monitor your turn.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <div class="text-center mb-2">Not registered yet? <a href="{{ url_for('register') }}">Register here</a></div>
-    <div class="text-center"><a href="{{ url_for('board') }}">View Now Serving board</a></div>
-  </div>
+    <!-- BOTTOM LINKS -->
+    <div class="student-bottom-links">
+        <a href="{{ url_for('register') }}" class="student-bottom-link">
+            <div class="student-bottom-icon">
+                <i class="bi bi-person-plus"></i>
+            </div>
+            <div>
+                <strong>New Student?</strong>
+                <span>Register your information</span>
+            </div>
+            <i class="bi bi-chevron-right student-link-arrow"></i>
+        </a>
+
+        <a href="{{ url_for('board') }}" class="student-bottom-link">
+            <div class="student-bottom-icon">
+                <i class="bi bi-display"></i>
+            </div>
+            <div>
+                <strong>Now Serving Board</strong>
+                <span>View the currently served numbers</span>
+            </div>
+            <i class="bi bi-chevron-right student-link-arrow"></i>
+        </a>
+    </div>
+
 </div>
 {% endblock %}

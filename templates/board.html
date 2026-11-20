@@ -1,21 +1,163 @@
+
 {% extends "base.html" %}
-{% block title %}Now Serving{% endblock %}
+
+{% block title %}Now Serving | CampusQ{% endblock %}
+
 {% block content %}
-<h3 class="mb-3 text-center">Now Serving</h3>
-<div class="row g-3">
-  {% for s in services %}
-  <div class="col-md-6 col-lg-3">
-    <div class="card text-center h-100 {{ 'border-primary' if s.current else '' }}">
-      <div class="card-header">{{ s.info.service_name }}<br><small class="text-muted">{{ s.info.counter }}</small></div>
-      <div class="card-body">
-        <div class="display-1">{% if s.current %}#{{ s.current.queue_number }}{% else %}-{% endif %}</div>
-        <div class="text-muted mt-2">Waiting: {{ s.waiting }}</div>
-        {% if s.next %}<div class="small mt-1">Next: {% for n in s.next %}#{{ n }}{{ ', ' if not loop.last else '' }}{% endfor %}</div>{% endif %}
-      </div>
+<div class="serving-board">
+
+    <!-- BOARD HEADER -->
+    <div class="serving-header">
+        <div>
+            <span class="serving-eyebrow">CAMPUS QUEUE MANAGEMENT SYSTEM</span>
+            <h1>Now <span>Serving</span></h1>
+            <p>Keep track of your queue and get ready when your number is called.</p>
+        </div>
+
+        <div class="serving-live">
+            <span class="serving-live-dot"></span>
+            LIVE BOARD
+        </div>
     </div>
-  </div>
-  {% endfor %}
+
+    <!-- BOARD INFORMATION -->
+    <div class="serving-info-bar">
+        <div class="serving-info-item">
+            <i class="bi bi-megaphone-fill"></i>
+            <span>Queue Announcements</span>
+        </div>
+
+        <div class="serving-info-item">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Auto-refresh every 1 minute.</span>
+        </div>
+
+        <div class="serving-clock" id="servingClock">--:--:--</div>
+    </div>
+
+    <!-- SERVICE CARDS -->
+    <div class="serving-grid">
+
+        {% for s in services %}
+        <div class="serving-card {{ 'is-active' if s.current else '' }}">
+
+            <div class="serving-card-header">
+                <div class="serving-service-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+
+                <div class="serving-service-info">
+                    <h3>{{ s.info.service_name }}</h3>
+                    <span>{{ s.info.counter }}</span>
+                </div>
+
+                {% if s.current %}
+                <span class="serving-status active">ACTIVE</span>
+                {% else %}
+                <span class="serving-status idle">IDLE</span>
+                {% endif %}
+            </div>
+
+            <div class="serving-card-body">
+
+                <span class="serving-number-label">NOW SERVING</span>
+
+                <div class="serving-number {{ 'has-number' if s.current else '' }}">
+                    {% if s.current %}
+                        #{{ s.current.queue_number }}
+                    {% else %}
+                        <span class="serving-no-number">---</span>
+                    {% endif %}
+                </div>
+
+                <div class="serving-divider"></div>
+
+                <div class="serving-queue-details">
+                    <div class="serving-detail">
+                        <div class="serving-detail-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <span>Waiting</span>
+                            <strong>{{ s.waiting }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="serving-detail">
+                        <div class="serving-detail-icon next-icon">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                        </div>
+                        <div>
+                            <span>Up Next</span>
+                            <strong>
+                                {% if s.next %}
+                                    {% for n in s.next %}
+                                        #{{ n }}{{ ', ' if not loop.last else '' }}
+                                    {% endfor %}
+                                {% else %}
+                                    ---
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="serving-card-footer">
+                {% if s.current %}
+                    <i class="bi bi-broadcast"></i>
+                    Please proceed to the counter.
+                {% else %}
+                    <i class="bi bi-hourglass-split"></i>
+                    Waiting for the next transaction.
+                {% endif %}
+            </div>
+
+        </div>
+        {% else %}
+        <div class="serving-empty">
+            <i class="bi bi-inbox"></i>
+            <h3>No Services Available</h3>
+            <p>There are currently no queue services to display.</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="serving-footer">
+        <div class="serving-footer-brand">
+            <span class="serving-footer-dot"></span>
+            CAMPUSQ
+        </div>
+
+        <p>Please pay attention to the board and proceed when your number is called.</p>
+
+        <a href="{{ url_for('login') }}" class="serving-back-link">
+            <i class="bi bi-arrow-left"></i>
+            Back to Student Portal
+        </a>
+    </div>
+
 </div>
-<div class="text-center text-muted mt-4">Updates every 5 seconds</div>
-<script>setTimeout(function () { location.reload(); }, 5000);</script>
+
+<script>
+    // LIVE CLOCK
+    function updateServingClock() {
+        const clock = document.getElementById("servingClock");
+
+        if (!clock) return;
+
+        clock.textContent = new Date().toLocaleTimeString();
+    }
+
+    updateServingClock();
+    setInterval(updateServingClock, 1000);
+
+    // AUTOMATIC BOARD REFRESH
+    setTimeout(function () {
+        location.reload();
+    }, 60000);
+</script>
 {% endblock %}

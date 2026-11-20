@@ -1,33 +1,276 @@
+
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+
+{% block title %}Dashboard | CampusQ{% endblock %}
+
 {% block content %}
-<h4 class="mb-3">Dashboard <small class="text-muted fs-6">(today)</small></h4>
 
-<div class="row text-center mb-4">
-  <div class="col-md-4"><div class="card border-warning"><div class="card-body">
-    <div class="display-6">{{ waiting }}</div>Waiting</div></div></div>
-  <div class="col-md-4"><div class="card border-primary"><div class="card-body">
-    <div class="display-6">{{ serving }}</div>Being served</div></div></div>
-  <div class="col-md-4"><div class="card border-success"><div class="card-body">
-    <div class="display-6">{{ served }}</div>Served</div></div></div>
-</div>
+<section class="dashboard">
 
-<div class="card">
-  <div class="card-header">Services</div>
-  <table class="table mb-0">
-    <thead><tr><th>Service</th><th>Counter</th><th>Now serving</th><th>Waiting</th></tr></thead>
-    <tbody>
-    {% for s in services %}
-      <tr>
-        <td>{{ s.info.service_name }}</td>
-        <td>{{ s.info.counter }}</td>
-        <td>{% if s.current %}#{{ s.current.queue_number }} - {{ s.current.student_name }}{% else %}-{% endif %}</td>
-        <td>{{ s.waiting }}</td>
-      </tr>
+  <!-- Welcome Header -->
+  <header class="dashboard__header">
+    <div class="dashboard__welcome">
+      <span class="dashboard__eyebrow">
+        <span class="status-dot"></span>
+        STAFF OVERVIEW
+      </span>
+
+      <h1>Welcome back, {{ session.get('staff_name', 'Staff') }}!</h1>
+
+      <p>
+        Here's what's happening across your campus services today.
+      </p>
+    </div>
+
+    <div class="dashboard__date">
+      <span class="dashboard__date-label">YOUR WORKSPACE</span>
+      <strong>Campus Queue Management</strong>
+      <span class="dashboard__date-sub">Staff Dashboard</span>
+    </div>
+  </header>
+
+
+  <!-- Statistics -->
+
+  <section class="dashboard__stats" aria-label="Queue statistics">
+  
+    <!-- Waiting Students -->
+    <article class="overview-card overview-card--waiting">
+      <div class="overview-card__top">
+        <span class="overview-card__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+        </span>
+      
+        <span class="overview-card__tag">IN LINE</span>
+      </div>
+    
+      <div class="overview-card__number">{{ waiting }}</div>
+    
+      <div class="overview-card__bottom">
+        <div>
+          <h3>Waiting Students</h3>
+          <p>Students currently in line</p>
+        </div>
+      
+        <span class="overview-card__arrow">
+          <svg viewBox="0 0 24 24" width="20" height="20"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M7 17 17 7"></path>
+            <path d="M7 7h10v10"></path>
+          </svg>
+        </span>
+      </div>
+    </article>
+  
+  
+    <!-- Currently Being Served -->
+    <article class="overview-card overview-card--serving">
+      <div class="overview-card__top">
+        <span class="overview-card__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+            <path d="m9 16 2 2 4-4"></path>
+          </svg>
+        </span>
+      
+        <span class="overview-card__tag">ACTIVE</span>
+      </div>
+    
+      <div class="overview-card__number">{{ serving }}</div>
+    
+      <div class="overview-card__bottom">
+        <div>
+          <h3>Being Served</h3>
+          <p>Currently receiving assistance</p>
+        </div>
+      
+        <span class="overview-card__arrow">
+          <svg viewBox="0 0 24 24" width="20" height="20"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M7 17 17 7"></path>
+            <path d="M7 7h10v10"></path>
+          </svg>
+        </span>
+      </div>
+    </article>
+  
+  
+    <!-- Students Served -->
+    <article class="overview-card overview-card--served">
+      <div class="overview-card__top">
+        <span class="overview-card__icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="m8 12 3 3 5-6"></path>
+          </svg>
+        </span>
+      
+        <span class="overview-card__tag">COMPLETED</span>
+      </div>
+    
+      <div class="overview-card__number">{{ served }}</div>
+    
+      <div class="overview-card__bottom">
+        <div>
+          <h3>Students Served</h3>
+          <p>Successfully assisted today</p>
+        </div>
+      
+        <span class="overview-card__arrow">
+          <svg viewBox="0 0 24 24" width="20" height="20"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M7 17 17 7"></path>
+            <path d="M7 7h10v10"></path>
+          </svg>
+        </span>
+      </div>
+    </article>
+  
+  </section>
+
+
+
+  <!-- Services Overview -->
+  <section class="dashboard__services">
+
+    <div class="section-heading">
+      <div>
+        <span class="dashboard__eyebrow">CAMPUS OPERATIONS</span>
+        <h2>Service Overview</h2>
+        <p>Monitor the activity of your campus service counters.</p>
+      </div>
+
+      <span class="service-count">
+        {{ services|length }} Services
+      </span>
+    </div>
+
+
+    {% if services %}
+
+    <div class="service-grid">
+
+      {% for s in services %}
+
+      <article class="service-card">
+
+        <!-- Service Header -->
+        <div class="service-card__header">
+
+          <div class="service-card__identity">
+            <div class="service-card__icon">
+              <i class="bi bi-building"></i>
+            </div>
+
+            <div>
+              <h3>{{ s.info.service_name }}</h3>
+              <span>{{ s.info.counter }}</span>
+            </div>
+          </div>
+
+          {% if s.current %}
+            <span class="service-status service-status--active">
+              <span></span> Serving
+            </span>
+          {% else %}
+            <span class="service-status service-status--idle">
+              <span></span> Idle
+            </span>
+          {% endif %}
+
+        </div>
+
+
+        <!-- Current Queue -->
+        <div class="service-card__current">
+
+          <span class="service-card__label">NOW SERVING</span>
+
+          {% if s.current %}
+
+            <div class="service-card__ticket">
+              #{{ s.current.queue_number }}
+            </div>
+
+            <p>{{ s.current.student_name }}</p>
+
+          {% else %}
+
+            <div class="service-card__empty">
+              <span>—</span>
+              <p>No active ticket</p>
+            </div>
+
+          {% endif %}
+
+        </div>
+
+
+        <!-- Service Footer -->
+        <div class="service-card__footer">
+
+          <div>
+            <span class="service-card__waiting-number">
+              {{ s.waiting }}
+            </span>
+
+            <span class="service-card__waiting-label">
+              Students waiting
+            </span>
+          </div>
+
+          <span class="service-card__footer-icon">
+            <i class="bi bi-arrow-right"></i>
+          </span>
+
+        </div>
+
+      </article>
+
+      {% endfor %}
+
+    </div>
+
     {% else %}
-      <tr><td colspan="4" class="text-muted">No services yet.</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
+
+    <!-- Empty State -->
+    <div class="dashboard-empty">
+
+      <div class="dashboard-empty__icon">
+        <i class="bi bi-building-exclamation"></i>
+      </div>
+
+      <h3>No services available yet</h3>
+
+      <p>
+        There are currently no registered campus services to display.
+      </p>
+
+    </div>
+
+    {% endif %}
+
+  </section>
+
+</section>
+
 {% endblock %}
