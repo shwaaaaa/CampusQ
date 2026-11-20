@@ -1,18 +1,427 @@
+
 {% extends "base.html" %}
-{% block title %}History{% endblock %}
+
+{% block title %}Queue History | CampusQ{% endblock %}
+
 {% block content %}
-<h4 class="mb-3">Queue History <small class="text-muted fs-6">(served students)</small></h4>
-<div class="card">
-  <table class="table mb-0">
-    <thead><tr><th>Date</th><th>Service</th><th>#</th><th>Student</th></tr></thead>
-    <tbody>
-    {% for r in rows %}
-      <tr><td>{{ r.date }}</td><td>{{ r.service_name }}</td><td>{{ r.queue_number }}</td>
-          <td>{{ r.student_name }} <span class="text-muted small">({{ r.student_id }})</span></td></tr>
-    {% else %}
-      <tr><td colspan="4" class="text-muted">No served students yet.</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
+<div class="history-page">
+
+    <!-- PAGE HEADER -->
+    <div class="history-header">
+        <div>
+            <span class="history-eyebrow">RECORDS & MONITORING</span>
+            <h1>Queue History</h1>
+            <p>Review previously served students and completed queue transactions.</p>
+        </div>
+
+        <div class="history-header-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="history-summary">
+        <div class="history-summary-icon">
+            <i class="bi bi-check2-circle"></i>
+        </div>
+        <div>
+            <span class="history-summary-label">TOTAL SERVED RECORDS</span>
+            <h2 id="historyTotal">{{ rows|length }}</h2>
+            <p>Recorded queue transactions</p>
+        </div>
+    </div>
+
+    <!-- HISTORY TABLE -->
+    <div class="history-card">
+
+        <div class="history-card-header">
+            <div>
+                <h3>Transaction Records</h3>
+                <p>A complete list of served students.</p>
+            </div>
+
+            
+            <div class="history-tools">
+                <div class="history-search">
+                    <i class="bi bi-search"></i>
+                    <input
+                        type="text"
+                        id="historySearch"
+                        placeholder="Search records..."
+                        autocomplete="off"
+                    >
+                </div>
+              
+                <button type="button" class="history-print-btn" onclick="printHistoryReport()">
+                    <i class="bi bi-printer"></i>
+                    Generate Report
+                </button>
+            </div>
+
+        </div>
+
+        <div class="history-table-wrapper">
+            <table class="history-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>DATE</th>
+                        <th>SERVICE</th>
+                        <th>QUEUE NO.</th>
+                        <th>STUDENT INFORMATION</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+
+                <tbody id="historyTableBody">
+                    {% for r in rows %}
+                    <tr class="history-row">
+                        <td>
+                            <div class="history-date">
+                                <i class="bi bi-calendar3"></i>
+                                <span>{{ r.date }}</span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="history-service">
+                                {{ r.service_name }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="history-queue-number">
+                                #{{ r.queue_number }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="history-student">
+                                <div class="history-avatar">
+                                    {{ r.student_name[:1]|upper if r.student_name else '?' }}
+                                </div>
+
+                                <div>
+                                    <strong>{{ r.student_name }}</strong>
+                                    <span>{{ r.student_id }}</span>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="history-status">
+                                <i class="bi bi-check-circle-fill"></i>
+                                Served
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="history-empty">
+                                <div class="history-empty-icon">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                                <h4>No History Yet</h4>
+                                <p>Served students will appear here once queue transactions are completed.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="history-card-footer">
+            <span id="historyResultCount">
+                Showing {{ rows|length }} record(s)
+            </span>
+            <span class="history-footer-note">
+                <i class="bi bi-shield-check"></i>
+                Queue transaction records
+            </span>
+        </div>
+
+    </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("historySearch");
+    const tableBody = document.getElementById("historyTableBody");
+    const resultCount = document.getElementById("historyResultCount");
+
+    if (!searchInput || !tableBody || !resultCount) return;
+
+    const rows = Array.from(
+        tableBody.querySelectorAll(".history-row")
+    );
+
+    searchInput.addEventListener("input", function () {
+        const searchValue = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        rows.forEach(function (row) {
+            const rowText = row.textContent.toLowerCase();
+            const matches = rowText.includes(searchValue);
+
+            row.style.display = matches ? "" : "none";
+
+            if (matches) visibleCount++;
+        });
+
+        resultCount.textContent =
+            `Showing ${visibleCount} of ${rows.length} record(s)`;
+    });
+});
+
+
+
+function printHistoryReport() {
+    const tableRows = Array.from(
+        document.querySelectorAll("#historyTableBody .history-row")
+    );
+
+    const visibleRows = tableRows.filter(
+        row => row.style.display !== "none"
+    );
+
+    if (visibleRows.length === 0) {
+        alert("There are no records available to include in the report.");
+        return;
+    }
+
+    const reportRows = visibleRows.map(row => {
+        const cells = row.querySelectorAll("td");
+
+        const date = cells[0].innerText.trim();
+        const service = cells[1].innerText.trim();
+        const queueNumber = cells[2].innerText.trim();
+        const studentName = cells[3].querySelector("strong")?.innerText.trim() || "";
+        const studentId = cells[3].querySelector("span")?.innerText.trim() || "";
+
+        return `
+            <tr>
+                <td>${escapeHTML(date)}</td>
+                <td>${escapeHTML(service)}</td>
+                <td>${escapeHTML(queueNumber)}</td>
+                <td>${escapeHTML(studentName)}</td>
+                <td>${escapeHTML(studentId)}</td>
+                <td>Served</td>
+            </tr>
+        `;
+    }).join("");
+
+    const generatedDate = new Date().toLocaleString();
+
+    const reportWindow = window.open("", "_blank");
+
+    if (!reportWindow) {
+        alert("Please allow pop-ups to generate the printable report.");
+        return;
+    }
+
+    reportWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>CampusQ - Queue History Report</title>
+            <meta charset="UTF-8">
+
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    color: #222;
+                    margin: 35px;
+                }
+
+                .report-header {
+                    text-align: center;
+                    border-bottom: 3px solid #245c3b;
+                    padding-bottom: 15px;
+                    margin-bottom: 25px;
+                }
+
+                .report-header h1 {
+                    margin: 0;
+                    color: #245c3b;
+                    font-size: 25px;
+                }
+
+                .report-header p {
+                    margin: 6px 0;
+                    color: #555;
+                    font-size: 12px;
+                }
+
+                .report-title {
+                    text-align: center;
+                    margin: 25px 0;
+                }
+
+                .report-title h2 {
+                    margin-bottom: 5px;
+                    font-size: 19px;
+                }
+
+                .report-title p {
+                    color: #666;
+                    font-size: 12px;
+                }
+
+                .summary {
+                    margin: 20px 0;
+                    padding: 12px;
+                    background: #f0f5f0;
+                    border: 1px solid #d6e4d8;
+                    font-size: 13px;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                    font-size: 11px;
+                }
+
+                th, td {
+                    border: 1px solid #ccc;
+                    padding: 10px 8px;
+                    text-align: left;
+                }
+
+                th {
+                    background: #245c3b;
+                    color: white;
+                    font-weight: bold;
+                }
+
+                tbody tr:nth-child(even) {
+                    background: #f6f8f6;
+                }
+
+                .signatures {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 50px;
+                    margin-top: 65px;
+                }
+
+                .signature {
+                    width: 45%;
+                    text-align: center;
+                    font-size: 12px;
+                }
+
+                .signature-line {
+                    border-top: 1px solid #333;
+                    padding-top: 8px;
+                    margin-top: 35px;
+                }
+
+                .footer {
+                    margin-top: 40px;
+                    text-align: center;
+                    font-size: 10px;
+                    color: #777;
+                }
+
+                @page {
+                    size: landscape;
+                    margin: 15mm;
+                }
+
+                @media print {
+                    body {
+                        margin: 0;
+                    }
+
+                    thead {
+                        display: table-header-group;
+                    }
+
+                    tr {
+                        break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+
+        <body>
+            <div class="report-header">
+                <h1>CAMPUSQ</h1>
+                <p>Campus Queue Management System</p>
+            </div>
+
+            <div class="report-title">
+                <h2>QUEUE HISTORY REPORT</h2>
+                <p>Served Student Transaction Records</p>
+            </div>
+
+            <div class="summary">
+                <strong>Total Served Records:</strong> ${visibleRows.length}
+                <br>
+                <strong>Date Generated:</strong> ${escapeHTML(generatedDate)}
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Service</th>
+                        <th>Queue No.</th>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${reportRows}
+                </tbody>
+            </table>
+
+            <div class="signatures">
+                <div class="signature">
+                    <div class="signature-line">
+                        Prepared by
+                    </div>
+                </div>
+
+                <div class="signature">
+                    <div class="signature-line">
+                        Verified by
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                Generated through CampusQ Queue Management System
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+
+    reportWindow.document.close();
+}
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, function(character) {
+        return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        }[character];
+    });
+}
+
+</script>
+
 {% endblock %}
