@@ -1,4 +1,7 @@
-"""Run once to create the first staff account:  python create_admin.py"""
+"""Run once to create the main admin account:  py create_admin.py
+
+After that, run the app, log in, and use the Services and Staff pages to set up
+each department's services and staff accounts."""
 from getpass import getpass
 
 from database import Database
@@ -6,19 +9,13 @@ from database import Database
 db = Database("campusq.db")
 
 name = input("Full name: ")
-department = input("Department (e.g. Registrar): ")
+department = input("Department (e.g. Administration): ")
 username = input("Username: ")
 password = getpass("Password: ")
 
 try:
-    db.add_staff("S-" + username, name, department, username, password)
-    print("Staff account created. You can now run:  python app.py")
+    db.add_staff("S-" + username, name, department, username, password, is_admin=True)
+    print("Main admin account created. You can now run:  py app.py")
+    print("Then log in and add your services and staff accounts from the navbar.")
 except ValueError as e:
     print("Error:", e)
-
-# Optional: add some starting services if there are none yet
-if not db.get_services():
-    for service, counter in [("Registrar", "Window 1"), ("Cashier", "Window 2"),
-                             ("Library", "Desk 3"), ("Clinic", "Room 4")]:
-        db.add_service(service, counter)
-    print("Added starter services: Registrar, Cashier, Library, Clinic")

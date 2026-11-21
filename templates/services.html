@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Services</h1>
+    <p class="muted">Set up what each department offers. Staff only see the services of their own department.</p>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post">
+    <input type="hidden" id="f_id" name="service_id">
+    <div class="form-grid form-grid--3">
+      <div class="field">
+        <label class="label" for="f_name">Service name</label>
+        <input class="input" id="f_name" name="service_name" placeholder="e.g. Transcript request">
+      </div>
+      <div class="field">
+        <label class="label" for="f_counter">Counter</label>
+        <input class="input" id="f_counter" name="counter" placeholder="Window 1">
+      </div>
+      <div class="field">
+        <label class="label" for="f_dept">Department</label>
+        <input class="input" id="f_dept" name="department" list="dept-list" placeholder="e.g. Registrar" autocomplete="off">
+        <datalist id="dept-list">
+          {% for d in departments %}<option value="{{ d }}">{% endfor %}
+        </datalist>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary" formaction="{{ url_for('service_add') }}">Add service</button>
+      <button class="btn btn--ghost" formaction="{{ url_for('service_update') }}">Save changes</button>
+      <button class="btn btn--ghost" id="f_toggle" formaction="{{ url_for('service_archive') }}">Archive</button>
+      <button type="button" class="btn btn--ghost" onclick="clearForm()">Clear</button>
+    </div>
+    <p class="hint">Select a service in the table to edit or archive it. Archiving hides it from the queue and the student pages but keeps its history.</p>
+  </form>
+</div>
+
+<h2 class="section-title">All services</h2>
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Service</th><th>Counter</th><th>Department</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+    {% for s in services %}
+      <tr class="is-clickable" tabindex="0"
+          data-id="{{ s.service_id }}" data-name="{{ s.service_name }}"
+          data-counter="{{ s.counter or '' }}" data-dept="{{ s.department or '' }}"
+          data-archived="{{ s.archived }}"
+          onclick="loadRow(this)" onkeydown="if (event.key === 'Enter') loadRow(this)">
+        <td>{{ s.service_name }}</td>
+        <td>{{ s.counter or '' }}</td>
+        <td>
+          {% if s.department %}{{ s.department }}
+          {% else %}<span class="badge badge--waiting">No department</span>{% endif %}
+        </td>
+        <td>
+          {% if s.archived %}<span class="badge badge--cancelled">Archived</span>
+          {% else %}<span class="badge badge--active">Active</span>{% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="4" class="muted">No services yet. Add the first one above.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="hint">Services with no department are only visible to admins until you assign one.</p>
+
+<script>
+function loadRow(tr) {
+  document.getElementById('f_id').value = tr.dataset.id;
+  document.getElementById('f_name').value = tr.dataset.name;
+  document.getElementById('f_counter').value = tr.dataset.counter;
+  document.getElementById('f_dept').value = tr.dataset.dept;
+  document.getElementById('f_toggle').textContent = tr.dataset.archived === '1' ? 'Restore' : 'Archive';
+  document.querySelectorAll('tr.is-selected').forEach(r => r.classList.remove('is-selected'));
+  tr.classList.add('is-selected');
+}
+function clearForm() {
+  ['f_id', 'f_name', 'f_counter', 'f_dept'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_toggle').textContent = 'Archive';
+  document.querySelectorAll('tr.is-selected').forEach(r => r.classList.remove('is-selected'));
+}
+</script>
+{% endblock %}

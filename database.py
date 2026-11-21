@@ -19,6 +19,28 @@ class Database:
         schema = (Path(__file__).parent / "schema.sql").read_text()
         self._conn.executescript(schema)
         self._conn.commit()
+        self._upgrade_old_database()
+
+    def _upgrade_old_database(self):
+        """An older campusq.db is missing the new columns, so add them once.
+        If the column is already there, SQLite complains and we just move on."""
+        try:
+            self._conn.execute("ALTER TABLE staff ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
+            # the first account ever created becomes the main admin
+            self._conn.execute(
+                "UPDATE staff SET is_admin=1 WHERE rowid=(SELECT MIN(rowid) FROM staff)"
+            )
+        except sqlite3.OperationalError:
+            pass
+        try:
+            self._conn.execute("ALTER TABLE services ADD COLUMN department TEXT")
+        except sqlite3.OperationalError:
+            pass
+        try:
+            self._conn.execute("ALTER TABLE services ADD COLUMN archived INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+        self._conn.commit()
 
     @staticmethod
     def _today():
@@ -68,16 +90,23 @@ class Database:
             raise ValueError("Cannot delete: this student has queue records.")
 
     # ---------------- Staff / Login ----------------
-    def add_staff(self, staff_id, name, department, username, password):
+    def add_staff(self, staff_id, name, department, username, password, is_admin=False):
         try:
             self._conn.execute(
-                "INSERT INTO staff (staff_id, name, department, username, password_hash) "
-                "VALUES (?,?,?,?,?)",
-                (staff_id, name, department, username, generate_password_hash(password)),
+                "INSERT INTO staff (staff_id, name, department, username, password_hash, is_admin) "
+                "VALUES (?,?,?,?,?,?)",
+                (staff_id, name, department, username,
+                 generate_password_hash(password), int(is_admin)),
             )
             self._conn.commit()
         except sqlite3.IntegrityError:
             raise ValueError("Staff ID or username already exists.")
+
+    def get_staff(self):
+        return self._conn.execute(
+            "SELECT staff_id, name, department, username, is_admin FROM staff "
+            "ORDER BY is_admin DESC, name"
+        ).fetchall()
 
     def verify_login(self, username, password):
         """Returns the staff row if the login is correct, otherwise None."""
@@ -88,21 +117,63 @@ class Database:
             return row
         return None
 
+    def get_departments(self):
+        """Department names already used, for the suggestion lists."""
+        rows = self._conn.execute(
+            "SELECT department FROM staff UNION SELECT department FROM services "
+            "ORDER BY department"
+        ).fetchall()
+        return [r["department"] for r in rows if r["department"]]
+
     # ---------------- Services ----------------
-    def add_service(self, service_name, counter):
+    def add_service(self, service_name, counter, department):
         cur = self._conn.execute(
-            "INSERT INTO services (service_name, counter) VALUES (?,?)",
-            (service_name, counter),
+            "INSERT INTO services (service_name, counter, department) VALUES (?,?,?)",
+            (service_name, counter, department),
         )
         self._conn.commit()
         return cur.lastrowid
 
-    def get_services(self):
-        return self._conn.execute("SELECT * FROM services ORDER BY service_name").fetchall()
+    def get_service(self, service_id):
+        return self._conn.execute(
+            "SELECT * FROM services WHERE service_id=?", (service_id,)
+        ).fetchone()
+
+    def get_services(self, department=None, include_archived=False):
+        """Leave department empty (None) to get every department's services.
+        Archived services are left out unless include_archived is True."""
+        sql = "SELECT * FROM services WHERE 1=1"
+        params = []
+        if not include_archived:
+            sql += " AND archived=0"
+        if department is not None:
+            sql += " AND LOWER(department)=LOWER(?)"
+            params.append(department)
+        sql += " ORDER BY service_name"
+        return self._conn.execute(sql, params).fetchall()
+
+    def update_service(self, service_id, service_name, counter, department):
+        self._conn.execute(
+            "UPDATE services SET service_name=?, counter=?, department=? WHERE service_id=?",
+            (service_name, counter, department, service_id),
+        )
+        self._conn.commit()
+
+    def set_service_archived(self, service_id, archived):
+        """Archiving hides a service but keeps its queue history."""
+        self._conn.execute(
+            "UPDATE services SET archived=? WHERE service_id=?",
+            (int(archived), service_id),
+        )
+        self._conn.commit()
 
     # ---------------- Queue ----------------
     def add_queue(self, student_id, service_id):
         """Gives the student the next queue number for that service today."""
+        service = self.get_service(service_id)
+        if service is None or service["archived"]:
+            raise ValueError("That service is not available.")
+
         today = self._today()
         already = self._conn.execute(
             "SELECT 1 FROM queue WHERE student_id=? AND service_id=? AND date=? "
@@ -193,7 +264,12 @@ class Database:
             (entry["service_id"], entry["date"], entry["queue_number"]),
         ).fetchone()[0]
 
-    def get_history(self):
-        return self._conn.execute(
-            self._QUEUE_SELECT + "WHERE q.status='served' ORDER BY q.date DESC, q.queue_number DESC"
-        ).fetchall()
+    def get_history(self, department=None):
+        """Leave department empty (None) to get every department's history."""
+        sql = self._QUEUE_SELECT + "WHERE q.status='served'"
+        params = []
+        if department is not None:
+            sql += " AND LOWER(sv.department)=LOWER(?)"
+            params.append(department)
+        sql += " ORDER BY q.date DESC, q.queue_number DESC"
+        return self._conn.execute(sql, params).fetchall()

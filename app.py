@@ -19,6 +19,34 @@ def login_required(view):
     return wrapper
 
 
+def admin_required(view):
+    """Only admins can open pages that use this."""
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if "staff_id" not in session:
+            return redirect(url_for("login"))
+        if not session.get("is_admin"):
+            flash("Only admins can open that page.", "danger")
+            return redirect(url_for("dashboard"))
+        return view(*args, **kwargs)
+    return wrapper
+
+
+def _my_services():
+    """Admins see every service. Other staff only see their own department's."""
+    if session.get("is_admin"):
+        return db.get_services()
+    return db.get_services(department=session.get("department", ""))
+
+
+def _allowed(service_id):
+    """True if the logged-in staff member may manage this service's queue."""
+    for s in _my_services():
+        if s["service_id"] == service_id:
+            return True
+    return False
+
+
 # ---------------------------------------------------------------- Login
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -27,6 +55,8 @@ def login():
         if staff:
             session["staff_id"] = staff["staff_id"]
             session["staff_name"] = staff["name"]
+            session["department"] = staff["department"]
+            session["is_admin"] = bool(staff["is_admin"])
             return redirect(url_for("dashboard"))
         flash("Incorrect username or password.", "danger")
     return render_template("login.html")
@@ -42,14 +72,17 @@ def logout():
 @app.route("/")
 @login_required
 def dashboard():
-    waiting = len(db.get_queue(status="waiting"))
-    serving = len(db.get_queue(status="serving"))
-    served = len(db.get_queue(status="served"))
+    waiting = 0
+    serving = 0
+    served = 0
 
     services = []
-    for s in db.get_services():
+    for s in _my_services():
         current = db.get_queue(service_id=s["service_id"], status="serving")
         waiting_here = len(db.get_queue(service_id=s["service_id"], status="waiting"))
+        waiting += waiting_here
+        serving += len(current)
+        served += len(db.get_queue(service_id=s["service_id"], status="served"))
         services.append({"info": s,
                          "current": current[0] if current else None,
                          "waiting": waiting_here})
@@ -124,10 +157,12 @@ def student_delete():
 @app.route("/queue")
 @login_required
 def queue():
-    services = db.get_services()
+    services = _my_services()
     selected = request.args.get("service", type=int)
-    if selected is None and services:
-        selected = services[0]["service_id"]
+    if selected is None or not _allowed(selected):
+        selected = None
+        if services:
+            selected = services[0]["service_id"]
 
     entries = db.get_queue(service_id=selected) if selected else []
     current = next((e for e in entries if e["status"] == "serving"), None)
@@ -141,6 +176,9 @@ def queue():
 def queue_add():
     student_id = request.form["student_id"].strip()
     service_id = int(request.form["service_id"])
+    if not _allowed(service_id):
+        flash("You can only manage your own department's queue.", "danger")
+        return redirect(url_for("queue"))
     try:
         result = db.add_queue(student_id, service_id)
         flash(f"Queue number #{result['queue_number']} assigned.", "success")
@@ -152,6 +190,9 @@ def queue_add():
 @app.route("/queue/call-next/<int:service_id>", methods=["POST"])
 @login_required
 def queue_call_next(service_id):
+    if not _allowed(service_id):
+        flash("You can only manage your own department's queue.", "danger")
+        return redirect(url_for("queue"))
     called = db.call_next(service_id)
     if called:
         flash(f"Now serving #{called['queue_number']} - {called['student_name']}.", "success")
@@ -163,7 +204,11 @@ def queue_call_next(service_id):
 @app.route("/queue/<int:queue_id>/status", methods=["POST"])
 @login_required
 def queue_status(queue_id):
-    service_id = request.form["service_id"]
+    entry = db.get_queue_entry(queue_id)
+    if entry is None or not _allowed(entry["service_id"]):
+        flash("You can only manage your own department's queue.", "danger")
+        return redirect(url_for("queue"))
+    service_id = entry["service_id"]
     try:
         db.update_status(queue_id, request.form["status"])
         flash("Status updated.", "success")
@@ -176,7 +221,98 @@ def queue_status(queue_id):
 @app.route("/history")
 @login_required
 def history():
-    return render_template("history.html", rows=db.get_history())
+    if session.get("is_admin"):
+        rows = db.get_history()
+    else:
+        rows = db.get_history(department=session.get("department", ""))
+    return render_template("history.html", rows=rows)
+
+
+# ------------------------------------------------- Services (admin only)
+def _read_service_form():
+    service_name = request.form["service_name"].strip()
+    counter = request.form["counter"].strip()
+    department = request.form["department"].strip()
+    return service_name, counter, department
+
+
+@app.route("/services")
+@admin_required
+def manage_services():
+    return render_template("services.html",
+                           services=db.get_services(include_archived=True),
+                           departments=db.get_departments())
+
+
+@app.route("/services/add", methods=["POST"])
+@admin_required
+def service_add():
+    service_name, counter, department = _read_service_form()
+    if not service_name or not department:
+        flash("Service name and department are required.", "danger")
+    else:
+        db.add_service(service_name, counter, department)
+        flash(f"Service {service_name} added to {department}.", "success")
+    return redirect(url_for("manage_services"))
+
+
+@app.route("/services/update", methods=["POST"])
+@admin_required
+def service_update():
+    service_id = request.form.get("service_id", type=int)
+    service_name, counter, department = _read_service_form()
+    if service_id is None or not service_name or not department:
+        flash("Click a service in the table first, then edit the details.", "danger")
+    else:
+        db.update_service(service_id, service_name, counter, department)
+        flash(f"Service {service_name} updated.", "success")
+    return redirect(url_for("manage_services"))
+
+
+@app.route("/services/archive", methods=["POST"])
+@admin_required
+def service_archive():
+    service_id = request.form.get("service_id", type=int)
+    service = db.get_service(service_id)
+    if service is None:
+        flash("Click a service in the table first.", "danger")
+    elif service["archived"]:
+        db.set_service_archived(service_id, False)
+        flash(f"Service {service['service_name']} restored.", "success")
+    else:
+        db.set_service_archived(service_id, True)
+        flash(f"Service {service['service_name']} archived.", "success")
+    return redirect(url_for("manage_services"))
+
+
+# ---------------------------------------------- Staff accounts (admin only)
+@app.route("/staff", methods=["GET", "POST"])
+@admin_required
+def staff_accounts():
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        department = request.form["department"].strip()
+        username = request.form["username"].strip()
+        password = request.form["password"]
+        confirm = request.form["confirm"]
+        is_admin = request.form.get("is_admin") == "on"
+
+        if not (name and department and username and password):
+            flash("All fields are required.", "danger")
+        elif len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+        elif password != confirm:
+            flash("Passwords do not match.", "danger")
+        else:
+            try:
+                db.add_staff("S-" + username, name, department, username, password, is_admin)
+                flash(f"Staff account '{username}' created.", "success")
+                return redirect(url_for("staff_accounts"))
+            except ValueError as e:      # e.g. username already taken
+                flash(str(e), "danger")
+
+    return render_template("staff.html", form=request.form,
+                           staff=db.get_staff(), departments=db.get_departments())
 
 
 # ------------------------------------- Student pages (no login needed)

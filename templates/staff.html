@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Staff accounts{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Staff accounts</h1>
+    <p class="muted">Create a login for another staff member. They only see the services of their own department.</p>
+  </div>
+</div>
+
+<div class="card card--narrow">
+  <h2 class="card__title">New staff account</h2>
+  <form method="post">
+    <div class="field">
+      <label class="label" for="name">Full name</label>
+      <input class="input" id="name" name="name" value="{{ form.get('name', '') }}" required autofocus>
+    </div>
+    <div class="field">
+      <label class="label" for="department">Department</label>
+      <input class="input" id="department" name="department" value="{{ form.get('department', '') }}"
+             list="dept-list" placeholder="e.g. Registrar" autocomplete="off" required>
+      <datalist id="dept-list">
+        {% for d in departments %}<option value="{{ d }}">{% endfor %}
+      </datalist>
+    </div>
+    <div class="field">
+      <label class="label" for="username">Username</label>
+      <input class="input" id="username" name="username" value="{{ form.get('username', '') }}"
+             autocomplete="off" required>
+    </div>
+    <div class="field">
+      <label class="label" for="password">Password</label>
+      <input class="input" id="password" name="password" type="password"
+             minlength="8" autocomplete="new-password" required>
+    </div>
+    <div class="field">
+      <label class="label" for="confirm">Confirm password</label>
+      <input class="input" id="confirm" name="confirm" type="password"
+             minlength="8" autocomplete="new-password" required>
+    </div>
+    <label class="check">
+      <input type="checkbox" name="is_admin" {{ 'checked' if form.get('is_admin') else '' }}>
+      <span>Make this an admin (can manage services and staff, and sees every department)</span>
+    </label>
+    <button class="btn btn--primary">Create staff account</button>
+    <p class="hint">Password: at least 8 characters. Use the same department spelling as the Services page so the right services show up.</p>
+  </form>
+</div>
+
+<h2 class="section-title">Existing accounts</h2>
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Name</th><th>Username</th><th>Department</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+    {% for m in staff %}
+      <tr>
+        <td>{{ m.name }}</td>
+        <td>{{ m.username }}</td>
+        <td>{{ m.department or '' }}</td>
+        <td>
+          {% if m.is_admin %}<span class="badge badge--active">Admin</span>
+          {% else %}<span class="badge">Staff</span>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -30,13 +30,9 @@
 
   {% if not services %}
 
-    <div class="dashboard-empty">
-      <div class="dashboard-empty__icon">⌂</div>
-      <h3>No services available</h3>
-      <p>
-        There are currently no registered services.
-        Run create_admin.py to add the starter services.
-      </p>
+    <div class="alert alert--warning">
+      {% if session.get('is_admin') %}No services yet. Add some on the <a href="{{ url_for('manage_services') }}">Services</a> page.
+      {% else %}Your department has no services yet. Ask an admin to add them.{% endif %}
     </div>
 
   {% else %}

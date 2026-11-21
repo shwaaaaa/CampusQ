@@ -12,7 +12,9 @@
   {% block head %}{% endblock %}
 </head>
 <body>
-  {% if session.get('staff_name') %}
+  {% if session.get('is_admin') %}
+    {% set links = [('dashboard','Dashboard'),('students','Students'),('queue','Queue'),('history','History'),('manage_services','Services'),('staff_accounts','Staff')] %}
+  {% elif session.get('staff_name') %}
     {% set links = [('dashboard','Dashboard'),('students','Students'),('queue','Queue'),('history','History')] %}
   {% else %}
     {% set links = [('get_number','Get a number'),('board','Now serving')] %}
