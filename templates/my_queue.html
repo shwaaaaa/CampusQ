@@ -1,197 +1,130 @@
 {% extends "base.html" %}
-{% block title %}My Queue{% endblock %}
+
+{% block title %}My Queue | CampusQ{% endblock %}
 
 {% block content %}
 
-<div class="myqueue-page">
+<header class="page-header">
+  <div class="page-header__text">
+    <span class="eyebrow">CampusQ student portal</span>
+    <h1 class="title">My queue <em>status</em></h1>
+    <p class="lead">Track your queue numbers and know when it's your turn.</p>
+  </div>
+  <span class="live"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Refreshes every minute</span>
+</header>
 
-    <!-- PAGE HEADER -->
-    <div class="myqueue-heading">
-        <div>
-            <span class="myqueue-eyebrow">CAMPUSQ STUDENT PORTAL</span>
-            <h2>My Queue Status</h2>
-            <p>Track your queue numbers and know when it's your turn.</p>
-        </div>
+<!-- Student -->
+<section class="glass profile" aria-label="Student account">
+  <span class="avatar avatar--lg" aria-hidden="true">{{ student.name[:1]|upper if student.name else '?' }}</span>
+  <div class="profile__text">
+    <span class="eyebrow">Student account</span>
+    <h2>{{ student.name }}</h2>
+    <p><i class="bi bi-person-badge" aria-hidden="true"></i>{{ student.student_id }}</p>
+  </div>
+  <span class="badge badge--active"><i class="bi bi-check-circle-fill" aria-hidden="true"></i>Registered student</span>
+</section>
 
-        <div class="myqueue-refresh">
-            <i class="bi bi-arrow-repeat"></i>
-            <span>Refreshes every 1 minute</span>
-        </div>
-    </div>
-
-    <!-- STUDENT INFORMATION -->
-    <div class="myqueue-student-card">
-        <div class="myqueue-avatar">
-            <i class="bi bi-person-fill"></i>
-        </div>
-
-        <div class="myqueue-student-info">
-            <span>STUDENT ACCOUNT</span>
-            <h4>{{ student.name }}</h4>
-            <p><i class="bi bi-person-badge"></i> {{ student.student_id }}</p>
-        </div>
-
-        <div class="myqueue-student-status">
-            <i class="bi bi-check-circle-fill"></i>
-            Registered Student
-        </div>
-    </div>
-
-    <!-- QUEUE TICKETS -->
-    <div class="myqueue-section-heading">
-        <div>
-            <h5>Your Queue Numbers</h5>
-            <p>Here are your queue transactions for today.</p>
-        </div>
-
-        <span class="myqueue-count">
-            {{ tickets|length }} ticket{{ '' if tickets|length == 1 else 's' }}
-        </span>
-    </div>
-
-    <div class="myqueue-ticket-list">
-
-        {% for t in tickets %}
-        {% set e = t.entry %}
-
-        <div class="myqueue-ticket
-            {{ 'is-serving' if e.status == 'serving' else '' }}
-            {{ 'is-served' if e.status == 'served' else '' }}">
-
-            <!-- TICKET HEADER -->
-            <div class="myqueue-ticket-top">
-                <div>
-                    <span class="myqueue-ticket-label">CAMPUS SERVICE</span>
-                    <h6>{{ e.service_name }}</h6>
-                </div>
-
-                {% if e.status == 'waiting' %}
-                    <span class="myqueue-status status-waiting">
-                        <span></span> Waiting
-                    </span>
-                {% elif e.status == 'serving' %}
-                    <span class="myqueue-status status-serving">
-                        <span></span> Serving
-                    </span>
-                {% elif e.status == 'served' %}
-                    <span class="myqueue-status status-served">
-                        <i class="bi bi-check-circle-fill"></i> Served
-                    </span>
-                {% else %}
-                    <span class="myqueue-status status-other">
-                        {{ e.status }}
-                    </span>
-                {% endif %}
-            </div>
-
-            <!-- QUEUE NUMBER -->
-            <div class="myqueue-number-area">
-                <span>YOUR QUEUE NUMBER</span>
-                <div class="myqueue-number">#{{ e.queue_number }}</div>
-                <div class="myqueue-counter">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    {{ e.counter }}
-                </div>
-            </div>
-
-            <!-- QUEUE STATUS MESSAGE -->
-            <div class="myqueue-message">
-
-                {% if e.status == 'waiting' %}
-
-                    <div class="myqueue-message-icon waiting-icon">
-                        <i class="bi bi-hourglass-split"></i>
-                    </div>
-
-                    <div>
-                        {% if t.ahead == 0 %}
-                            <strong>You are next in line!</strong>
-                            <p>Please stay nearby and prepare for your turn.</p>
-                        {% else %}
-                            <strong>{{ t.ahead }} student{{ '' if t.ahead == 1 else 's' }} ahead of you</strong>
-                            <p>Please wait until your queue number is called.</p>
-                        {% endif %}
-                    </div>
-
-                {% elif e.status == 'serving' %}
-
-                    <div class="myqueue-message-icon serving-icon">
-                        <i class="bi bi-bell-fill"></i>
-                    </div>
-
-                    <div>
-                        <strong>It's your turn!</strong>
-                        <p>Please proceed to <b>{{ e.counter }}</b> now.</p>
-                    </div>
-
-                {% elif e.status == 'served' %}
-
-                    <div class="myqueue-message-icon served-icon">
-                        <i class="bi bi-check-lg"></i>
-                    </div>
-
-                    <div>
-                        <strong>Transaction completed!</strong>
-                        <p>Thank you for using CampusQ.</p>
-                    </div>
-
-                {% else %}
-
-                    <div class="myqueue-message-icon waiting-icon">
-                        <i class="bi bi-info-circle"></i>
-                    </div>
-
-                    <div>
-                        <strong>Queue status: {{ e.status }}</strong>
-                        <p>Please check with the service counter if you need assistance.</p>
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-        {% else %}
-
-        <!-- EMPTY STATE -->
-        <div class="myqueue-empty">
-            <div class="myqueue-empty-icon">
-                <i class="bi bi-ticket-perforated"></i>
-            </div>
-
-            <h5>No Queue Numbers Yet</h5>
-            <p>You haven't received any queue numbers today. Choose a campus service to get started.</p>
-
-            <a href="{{ url_for('get_number') }}" class="myqueue-empty-btn">
-                Get a Queue Number
-                <i class="bi bi-arrow-right"></i>
-            </a>
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-    <!-- FOOTER ACTION -->
-    <div class="myqueue-footer">
-        <div>
-            <i class="bi bi-info-circle"></i>
-            <span>Keep this page open to monitor your queue status.</span>
-        </div>
-
-        <a href="{{ url_for('get_number') }}" class="myqueue-add-btn">
-            <i class="bi bi-plus-lg"></i>
-            Get Another Number
-        </a>
-    </div>
-
+<!-- Tickets -->
+<div class="section-head">
+  <div class="section-head__text">
+    <h2 class="section-head__title">Your queue <em>numbers</em></h2>
+    <p class="muted">Here are your queue transactions for today.</p>
+  </div>
+  <span class="chip">{{ tickets|length }} ticket{{ '' if tickets|length == 1 else 's' }}</span>
 </div>
 
-<script>
-    setTimeout(function () {
-        location.reload();
-    }, 60000);
-</script>
+{% if tickets %}
+<div class="tickets">
+  {% for t in tickets %}
+  {% set e = t.entry %}
+  <article class="ticket glass
+      {{ 'ticket--serving' if e.status == 'serving' else '' }}
+      {{ 'ticket--served' if e.status == 'served' else '' }}">
 
+    <div class="ticket__main">
+      <div class="ticket__top">
+        <div>
+          <span class="eyebrow">Campus service</span>
+          <h3>{{ e.service_name }}</h3>
+        </div>
+
+        {% if e.status == 'waiting' %}
+          <span class="badge badge--waiting"><span class="dot"></span>Waiting</span>
+        {% elif e.status == 'serving' %}
+          <span class="badge badge--serving"><span class="dot"></span>Serving</span>
+        {% elif e.status == 'served' %}
+          <span class="badge badge--served"><i class="bi bi-check-circle-fill" aria-hidden="true"></i>Served</span>
+        {% else %}
+          <span class="badge badge--{{ e.status|lower|replace(' ', '-')|replace('_', '-') }}">{{ e.status|replace('_', ' ') }}</span>
+        {% endif %}
+      </div>
+
+      <div>
+        <span class="eyebrow">Your queue number</span>
+        <div class="ticket__number figure">#{{ e.queue_number }}</div>
+      </div>
+
+      <span class="ticket__counter"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i>{{ e.counter }}</span>
+    </div>
+
+    <div class="ticket__stub">
+      {% if e.status == 'waiting' %}
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-hourglass-split"></i></span>
+        {% if t.ahead == 0 %}
+          <strong>You are next in line!</strong>
+          <p>Please stay nearby and prepare for your turn.</p>
+        {% else %}
+          <strong>{{ t.ahead }} student{{ '' if t.ahead == 1 else 's' }} ahead of you</strong>
+          <p>Please wait until your queue number is called.</p>
+        {% endif %}
+
+      {% elif e.status == 'serving' %}
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
+        <strong>It's your turn!</strong>
+        <p>Please proceed to <b>{{ e.counter }}</b> now.</p>
+
+      {% elif e.status == 'served' %}
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+        <strong>Transaction completed!</strong>
+        <p>Thank you for using CampusQ.</p>
+
+      {% else %}
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-info-circle"></i></span>
+        <strong>Queue status: {{ e.status|replace('_', ' ') }}</strong>
+        <p>Please check with the service counter if you need assistance.</p>
+      {% endif %}
+    </div>
+
+  </article>
+  {% endfor %}
+</div>
+
+{% else %}
+<section class="glass empty">
+  <span class="orb" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+  <h3 class="heading">No queue numbers yet</h3>
+  <p>You haven't received any queue numbers today. Choose a campus service to get started.</p>
+  <a href="{{ url_for('get_number') }}" class="btn btn--primary">
+    Get a queue number
+    <span class="btn__icon" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+  </a>
+</section>
+{% endif %}
+
+<div class="strip glass">
+  <span><i class="bi bi-info-circle" aria-hidden="true"></i>Keep this page open to monitor your queue status.</span>
+  <a href="{{ url_for('get_number') }}" class="btn btn--glass btn--sm">
+    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+    Get another number
+  </a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  setTimeout(function () {
+    location.reload();
+  }, 60000);
+</script>
 {% endblock %}

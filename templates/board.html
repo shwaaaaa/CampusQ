@@ -1,163 +1,221 @@
-
 {% extends "base.html" %}
 
 {% block title %}Now Serving | CampusQ{% endblock %}
 
+{% block head %}
+<script>
+  /* Apply display mode before the page paints, so it doesn't flicker.
+     ?display=1 / ?display=0 in the URL overrides the saved choice. */
+  (function () {
+    try {
+      var param = new URLSearchParams(location.search).get("display");
+      var on = param !== null ? param === "1" : localStorage.getItem("campusq.boardDisplay") === "1";
+      if (on) document.documentElement.classList.add("is-display");
+    } catch (e) {}
+  })();
+</script>
+{% endblock %}
+
 {% block content %}
-<div class="serving-board">
 
-    <!-- BOARD HEADER -->
-    <div class="serving-header">
-        <div>
-            <span class="serving-eyebrow">CAMPUS QUEUE MANAGEMENT SYSTEM</span>
-            <h1>Now <span>Serving</span></h1>
-            <p>Keep track of your queue and get ready when your number is called.</p>
-        </div>
+<!-- Header -->
+<section class="stage board__header">
+  <div class="board__title">
+    <span class="eyebrow">Campus Queue Management System</span>
+    <h1 class="display">Now <em>serving</em></h1>
+    <p class="lead board__lead">Keep track of your queue and get ready when your number is called.</p>
+  </div>
 
-        <div class="serving-live">
-            <span class="serving-live-dot"></span>
-            LIVE BOARD
-        </div>
-    </div>
+  <div class="board__actions">
+    <span class="live" id="boardLive"><span class="dot dot--live"></span><span id="boardLiveText">Live board</span></span>
+    <button type="button" class="btn btn--glass btn--sm" id="displayToggle" aria-pressed="false">
+      <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
+      <span>Display mode</span>
+    </button>
+  </div>
+</section>
 
-    <!-- BOARD INFORMATION -->
-    <div class="serving-info-bar">
-        <div class="serving-info-item">
-            <i class="bi bi-megaphone-fill"></i>
-            <span>Queue Announcements</span>
-        </div>
-
-        <div class="serving-info-item">
-            <i class="bi bi-arrow-repeat"></i>
-            <span>Auto-refresh every 1 minute.</span>
-        </div>
-
-        <div class="serving-clock" id="servingClock">--:--:--</div>
-    </div>
-
-    <!-- SERVICE CARDS -->
-    <div class="serving-grid">
-
-        {% for s in services %}
-        <div class="serving-card {{ 'is-active' if s.current else '' }}">
-
-            <div class="serving-card-header">
-                <div class="serving-service-icon">
-                    <i class="bi bi-building"></i>
-                </div>
-
-                <div class="serving-service-info">
-                    <h3>{{ s.info.service_name }}</h3>
-                    <span>{{ s.info.counter }}</span>
-                </div>
-
-                {% if s.current %}
-                <span class="serving-status active">ACTIVE</span>
-                {% else %}
-                <span class="serving-status idle">IDLE</span>
-                {% endif %}
-            </div>
-
-            <div class="serving-card-body">
-
-                <span class="serving-number-label">NOW SERVING</span>
-
-                <div class="serving-number {{ 'has-number' if s.current else '' }}">
-                    {% if s.current %}
-                        #{{ s.current.queue_number }}
-                    {% else %}
-                        <span class="serving-no-number">---</span>
-                    {% endif %}
-                </div>
-
-                <div class="serving-divider"></div>
-
-                <div class="serving-queue-details">
-                    <div class="serving-detail">
-                        <div class="serving-detail-icon">
-                            <i class="bi bi-people-fill"></i>
-                        </div>
-                        <div>
-                            <span>Waiting</span>
-                            <strong>{{ s.waiting }}</strong>
-                        </div>
-                    </div>
-
-                    <div class="serving-detail">
-                        <div class="serving-detail-icon next-icon">
-                            <i class="bi bi-arrow-right-circle-fill"></i>
-                        </div>
-                        <div>
-                            <span>Up Next</span>
-                            <strong>
-                                {% if s.next %}
-                                    {% for n in s.next %}
-                                        #{{ n }}{{ ', ' if not loop.last else '' }}
-                                    {% endfor %}
-                                {% else %}
-                                    ---
-                                {% endif %}
-                            </strong>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="serving-card-footer">
-                {% if s.current %}
-                    <i class="bi bi-broadcast"></i>
-                    Please proceed to the counter.
-                {% else %}
-                    <i class="bi bi-hourglass-split"></i>
-                    Waiting for the next transaction.
-                {% endif %}
-            </div>
-
-        </div>
-        {% else %}
-        <div class="serving-empty">
-            <i class="bi bi-inbox"></i>
-            <h3>No Services Available</h3>
-            <p>There are currently no queue services to display.</p>
-        </div>
-        {% endfor %}
-
-    </div>
-
-    <!-- FOOTER -->
-    <div class="serving-footer">
-        <div class="serving-footer-brand">
-            <span class="serving-footer-dot"></span>
-            CAMPUSQ
-        </div>
-
-        <p>Please pay attention to the board and proceed when your number is called.</p>
-
-        <a href="{{ url_for('login') }}" class="serving-back-link">
-            <i class="bi bi-arrow-left"></i>
-            Back to Student Portal
-        </a>
-    </div>
-
+<!-- Info bar -->
+<div class="board__bar glass">
+  <span class="board__bar-item"><i class="bi bi-megaphone-fill" aria-hidden="true"></i>Queue announcements</span>
+  <span class="board__bar-item"><i class="bi bi-arrow-repeat" aria-hidden="true"></i>Auto-refresh every 1 minute</span>
+  <span class="board__bar-item"><i class="bi bi-clock" aria-hidden="true"></i>Updated <span id="boardUpdated">just now</span></span>
+  <time class="board__clock" id="servingClock" aria-live="off">--:--:--</time>
 </div>
 
+<!-- Service cards (this block is swapped in place on every refresh) -->
+<div class="board__grid" id="boardGrid">
+  {% for s in services %}
+  <article class="board-card glass {{ 'is-active' if s.current else '' }}">
+
+    <div class="board-card__head">
+      <div class="board-card__id">
+        <span class="tile {{ 'tile--blue' if s.current else '' }}" aria-hidden="true"><i class="bi bi-building"></i></span>
+        <div>
+          <h3>{{ s.info.service_name }}</h3>
+          <span>{{ s.info.counter }}</span>
+        </div>
+      </div>
+
+      {% if s.current %}
+        <span class="badge badge--serving"><span class="dot"></span>Active</span>
+      {% else %}
+        <span class="badge badge--idle">Idle</span>
+      {% endif %}
+    </div>
+
+    <div class="board-card__now">
+      <span class="eyebrow">Now serving</span>
+      {% if s.current %}
+        <div class="board-card__number figure">#{{ s.current.queue_number }}</div>
+      {% else %}
+        <div class="board-card__number board-card__number--empty figure">—</div>
+      {% endif %}
+    </div>
+
+    <div class="board-card__stats">
+      <div class="board-card__stat">
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-people-fill"></i></span>
+        <div>
+          <span>Waiting</span>
+          <strong>{{ s.waiting }}</strong>
+        </div>
+      </div>
+
+      <div class="board-card__stat">
+        <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-arrow-right-circle-fill"></i></span>
+        <div>
+          <span>Up next</span>
+          <strong>
+            {% if s.next %}
+              {% for n in s.next %}#{{ n }}{{ ', ' if not loop.last else '' }}{% endfor %}
+            {% else %}
+              —
+            {% endif %}
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="board-card__foot">
+      {% if s.current %}
+        <i class="bi bi-broadcast" aria-hidden="true"></i>
+        Please proceed to the counter.
+      {% else %}
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+        Waiting for the next transaction.
+      {% endif %}
+    </div>
+
+  </article>
+  {% else %}
+  <section class="glass empty empty--full">
+    <span class="orb" aria-hidden="true"><i class="bi bi-inbox"></i></span>
+    <h3 class="heading">No services available</h3>
+    <p>There are currently no queue services to display.</p>
+  </section>
+  {% endfor %}
+</div>
+
+<!-- Footer -->
+<div class="board__footer glass">
+  <span class="brand__name">Campus<em>Q</em></span>
+  <span>Please pay attention to the board and proceed when your number is called.</span>
+  <a href="{{ url_for('get_number') }}" class="btn btn--glass btn--sm">
+    <i class="bi bi-arrow-left" aria-hidden="true"></i>
+    Back to student portal
+  </a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
-    // LIVE CLOCK
-    function updateServingClock() {
-        const clock = document.getElementById("servingClock");
+(function () {
+  var STORAGE_KEY = "campusq.boardDisplay";
+  var REFRESH_MS = 60000;
+  var root = document.documentElement;
+  var toggle = document.getElementById("displayToggle");
+  var lastUpdated = Date.now();
 
-        if (!clock) return;
+  /* ---------- Live clock ---------- */
+  function updateServingClock() {
+    var clock = document.getElementById("servingClock");
+    if (clock) clock.textContent = new Date().toLocaleTimeString();
 
-        clock.textContent = new Date().toLocaleTimeString();
+    var updated = document.getElementById("boardUpdated");
+    if (updated) {
+      var mins = Math.floor((Date.now() - lastUpdated) / 60000);
+      updated.textContent = mins < 1 ? "just now" : mins + " min ago";
     }
+  }
+  updateServingClock();
+  setInterval(updateServingClock, 1000);
 
-    updateServingClock();
-    setInterval(updateServingClock, 1000);
+  /* ---------- Display mode (per browser, user's choice) ---------- */
+  function save(on) {
+    try { localStorage.setItem(STORAGE_KEY, on ? "1" : "0"); } catch (e) {}
+  }
 
-    // AUTOMATIC BOARD REFRESH
-    setTimeout(function () {
-        location.reload();
-    }, 60000);
+  function syncToggle() {
+    var on = root.classList.contains("is-display");
+    toggle.setAttribute("aria-pressed", on ? "true" : "false");
+    toggle.querySelector("span").textContent = on ? "Exit display mode" : "Display mode";
+    toggle.querySelector("i").className = on ? "bi bi-fullscreen-exit" : "bi bi-arrows-fullscreen";
+  }
+
+  function setDisplay(on) {
+    root.classList.toggle("is-display", on);
+    save(on);
+    syncToggle();
+
+    try {
+      if (on && !document.fullscreenElement && root.requestFullscreen) {
+        root.requestFullscreen().catch(function () {});
+      } else if (!on && document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+      }
+    } catch (e) {}
+  }
+
+  if (toggle) {
+    syncToggle();
+    toggle.addEventListener("click", function () {
+      setDisplay(!root.classList.contains("is-display"));
+    });
+  }
+
+  /* ---------- Refresh the cards in place (keeps full screen) ---------- */
+  function setStale(stale) {
+    var live = document.getElementById("boardLive");
+    var text = document.getElementById("boardLiveText");
+    if (!live || !text) return;
+    live.classList.toggle("is-stale", stale);
+    text.textContent = stale ? "Reconnecting…" : "Live board";
+  }
+
+  function refreshBoard() {
+    fetch(location.pathname, { cache: "no-store", credentials: "same-origin" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        var fresh = doc.getElementById("boardGrid");
+        var grid = document.getElementById("boardGrid");
+        if (!fresh || !grid) throw new Error("Board not found");
+        grid.replaceWith(fresh);
+        lastUpdated = Date.now();
+        updateServingClock();
+        setStale(false);
+      })
+      .catch(function () {
+        setStale(true); /* keep showing the last numbers and try again next minute */
+      });
+  }
+
+  setInterval(refreshBoard, REFRESH_MS);
+})();
 </script>
 {% endblock %}

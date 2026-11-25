@@ -1,171 +1,156 @@
 {% extends "base.html" %}
-{% block title %}Student Registration{% endblock %}
+
+{% block title %}Student Registration | CampusQ{% endblock %}
 
 {% block content %}
 
-<div class="student-register-page">
+<header class="page-header">
+  <div class="page-header__text">
+    <span class="eyebrow">CampusQ student portal</span>
+    <h1 class="title">Create your <em>student account</em></h1>
+    <p class="lead">Register your student information to access campus queue services.</p>
+  </div>
+  <span class="orb" aria-hidden="true"><i class="bi bi-person-plus-fill"></i></span>
+</header>
 
-    <!-- PAGE HEADER -->
-    <div class="register-heading">
-        <div>
-            <span class="register-eyebrow">CAMPUSQ STUDENT PORTAL</span>
-            <h2>Create Your Student Account</h2>
-            <p>Register your student information to access campus queue services.</p>
-        </div>
+<div class="grid grid--main">
 
-        <div class="register-heading-icon">
-            <i class="bi bi-person-plus-fill"></i>
-        </div>
+  <!-- Registration form -->
+  <section class="glass glass--strong card card--lg" aria-labelledby="registerTitle">
+    <div class="card__head">
+      <span class="tile tile--blue" aria-hidden="true"><i class="bi bi-person-vcard"></i></span>
+      <div class="card__head-text">
+        <h2 class="heading" id="registerTitle">Student information</h2>
+        <p>Please provide your correct details below.</p>
+      </div>
     </div>
 
-    <div class="register-layout">
+    <form method="post">
+      <div class="field">
+        <label class="field__label" for="student_id">Student ID</label>
+        <div class="control">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <input
+            class="input"
+            id="student_id"
+            name="student_id"
+            type="text"
+            placeholder="e.g. 2500800"
+            required
+            autofocus
+          >
+        </div>
+        <span class="field__hint">Enter your official university student ID.</span>
+      </div>
 
-        <!-- REGISTRATION FORM -->
-        <div class="register-form-card">
+      <div class="field">
+        <label class="field__label" for="name">Full name</label>
+        <div class="control">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <input
+            class="input"
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Enter your full name"
+            autocomplete="name"
+            required
+          >
+        </div>
+      </div>
 
-            <div class="register-card-heading">
-                <div class="register-icon">
-                    <i class="bi bi-person-vcard"></i>
-                </div>
-                <div>
-                    <h5>Student Information</h5>
-                    <p>Please provide your correct details below.</p>
-                </div>
-            </div>
-
-            <form method="post" class="register-form">
-
-                <div class="register-field">
-                    <label for="student_id">Student ID</label>
-                    <div class="register-input-wrap">
-                        <i class="bi bi-person-badge"></i>
-                        <input
-                            id="student_id"
-                            name="student_id"
-                            type="text"
-                            placeholder="e.g. 2500800"
-                            required
-                            autofocus
-                        >
-                    </div>
-                    <small>Enter your official university student ID.</small>
-                </div>
-
-                <div class="register-field">
-                    <label for="name">Full Name</label>
-                    <div class="register-input-wrap">
-                        <i class="bi bi-person"></i>
-                        <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            placeholder="Enter your full name"
-                            required
-                        >
-                    </div>
-                </div>
-
-                <div class="register-field-row">
-
-                    <div class="register-field">
-                        <label for="course">Course</label>
-                        <div class="register-input-wrap">
-                            <i class="bi bi-mortarboard"></i>
-                            <input
-                                id="course"
-                                name="course"
-                                type="text"
-                                placeholder="e.g. BSIT"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="register-field register-year-field">
-                        <label for="year">Year Level</label>
-                        <div class="register-input-wrap">
-                            <i class="bi bi-calendar3"></i>
-                            <input
-                                id="year"
-                                name="year"
-                                type="number"
-                                min="1"
-                                max="6"
-                                placeholder="1–6"
-                            >
-                        </div>
-                    </div>
-
-                </div>
-
-                <button type="submit" class="register-submit-btn">
-                    <span>Complete Registration</span>
-                    <i class="bi bi-arrow-right"></i>
-                </button>
-
-                <p class="register-privacy-note">
-                    <i class="bi bi-shield-check"></i>
-                    Your information will be used for campus queue services.
-                </p>
-
-            </form>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label" for="course">Course</label>
+          <div class="control">
+            <i class="bi bi-mortarboard" aria-hidden="true"></i>
+            <input
+              class="input"
+              id="course"
+              name="course"
+              type="text"
+              placeholder="e.g. BSIT"
+            >
+          </div>
         </div>
 
-        <!-- SIDE INFORMATION -->
-        <div class="register-side">
-
-            <div class="register-welcome-card">
-                <div class="welcome-decoration">
-                    <i class="bi bi-mortarboard-fill"></i>
-                </div>
-
-                <span class="welcome-label">WELCOME TO CAMPUSQ</span>
-                <h3>Your campus transactions, made easier.</h3>
-                <p>
-                    Register once and make it easier to access available
-                    university services through the queue management system.
-                </p>
-            </div>
-
-            <div class="register-steps-card">
-                <h6>What happens next?</h6>
-
-                <div class="register-step">
-                    <div class="step-number">01</div>
-                    <div>
-                        <strong>Register your details</strong>
-                        <p>Submit your student information.</p>
-                    </div>
-                </div>
-
-                <div class="register-step">
-                    <div class="step-number">02</div>
-                    <div>
-                        <strong>Get a queue number</strong>
-                        <p>Select the campus service you need.</p>
-                    </div>
-                </div>
-
-                <div class="register-step">
-                    <div class="step-number">03</div>
-                    <div>
-                        <strong>Monitor your queue</strong>
-                        <p>Check your queue status while waiting.</p>
-                    </div>
-                </div>
-            </div>
-
+        <div class="field">
+          <label class="field__label" for="year">Year level</label>
+          <div class="control">
+            <i class="bi bi-calendar3" aria-hidden="true"></i>
+            <input
+              class="input"
+              id="year"
+              name="year"
+              type="number"
+              min="1"
+              max="6"
+              placeholder="1–6"
+            >
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- LOGIN / RETURN LINK -->
-    <div class="register-footer">
-        <span>Already registered?</span>
-        <a href="{{ url_for('get_number') }}">
-            Get a queue number
-            <i class="bi bi-arrow-up-right"></i>
-        </a>
-    </div>
+      <button type="submit" class="btn btn--primary btn--lg btn--block">
+        Complete registration
+        <span class="btn__icon" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+      </button>
 
+      <div class="note u-mt-sm">
+        <i class="bi bi-shield-check" aria-hidden="true"></i>
+        <span>Your information will be used for campus queue services.</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- Side information -->
+  <aside class="stack">
+    <section class="glass glass--deep welcome-card">
+      <span class="orb" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></span>
+      <span class="eyebrow">Welcome to CampusQ</span>
+      <h2>Your campus transactions, <em>made easier.</em></h2>
+      <p>
+        Register once and make it easier to access available
+        university services through the queue management system.
+      </p>
+    </section>
+
+    <section class="glass card" aria-labelledby="nextTitle">
+      <h2 class="heading heading--sm" id="nextTitle">What happens <em>next?</em></h2>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">01</span>
+          <div>
+            <strong>Register your details</strong>
+            <p>Submit your student information.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__num">02</span>
+          <div>
+            <strong>Get a queue number</strong>
+            <p>Select the campus service you need.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__num">03</span>
+          <div>
+            <strong>Monitor your queue</strong>
+            <p>Check your queue status while waiting.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </aside>
+</div>
+
+<div class="strip glass">
+  <span><i class="bi bi-person-check" aria-hidden="true"></i>Already registered?</span>
+  <a href="{{ url_for('get_number') }}" class="btn btn--glass btn--sm">
+    Get a queue number
+    <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+  </a>
 </div>
 
 {% endblock %}

@@ -1,209 +1,128 @@
-
 {% extends "base.html" %}
 
 {% block title %}Queue Management | CampusQ{% endblock %}
 
 {% block content %}
 
-<section class="queue-page">
+<header class="page-header">
+  <div class="page-header__text">
+    <span class="eyebrow"><span class="dot dot--live"></span>Staff workspace</span>
+    <h1 class="title">Queue <em>management</em></h1>
+    <p class="lead">Manage student queues, assign numbers, and serve students efficiently.</p>
+  </div>
+  <span class="orb" aria-hidden="true"><i class="bi bi-list-ol"></i></span>
+</header>
 
-  <!-- Page Header -->
-  <header class="queue-page__header">
-    <div>
-      <span class="dashboard__eyebrow">
-        <span class="status-dot"></span>
-        STAFF WORKSPACE
-      </span>
+{% if not services %}
 
-      <h1>Queue Management</h1>
-
-      <p>
-        Manage student queues, assign numbers, and serve students efficiently.
-      </p>
-    </div>
-
-    <div class="queue-page__header-icon">
-      <span>≡</span>
-    </div>
-  </header>
-
-
-  {% if not services %}
-
-    <div class="alert alert--warning">
+  <div class="flash flash--warning" role="status">
+    <span class="flash__icon" aria-hidden="true"><i class="bi bi-exclamation-triangle"></i></span>
+    <span>
       {% if session.get('is_admin') %}No services yet. Add some on the <a href="{{ url_for('manage_services') }}">Services</a> page.
       {% else %}Your department has no services yet. Ask an admin to add them.{% endif %}
+    </span>
+  </div>
+
+{% else %}
+
+  <!-- Service selector -->
+  <section aria-labelledby="serviceSelectTitle">
+    <div class="section-head section-head--flush">
+      <div class="section-head__text">
+        <h2 class="section-head__title" id="serviceSelectTitle">Select a <em>service</em></h2>
+        <p class="muted">Choose which campus counter you want to manage.</p>
+      </div>
+      <span class="chip">{{ services|length }} service{{ '' if services|length == 1 else 's' }}</span>
     </div>
 
-  {% else %}
+    <nav class="tabs" aria-label="Campus services">
+      {% for s in services %}
+      <a class="tab {{ 'is-active' if s.service_id == selected else '' }}"
+         href="{{ url_for('queue', service=s.service_id) }}"
+         {% if s.service_id == selected %}aria-current="page"{% endif %}>
+        <span class="dot" aria-hidden="true"></span>
+        {{ s.service_name }}
+      </a>
+      {% endfor %}
+    </nav>
+  </section>
 
+  <!-- Control center -->
+  <section class="grid grid--main u-mt">
 
-    <!-- Service Selector -->
-    <section class="queue-services">
-
-      <div class="queue-section-heading">
+    <!-- Now serving -->
+    <article class="console glass glass--deep" aria-labelledby="nowServingTitle">
+      <div class="console__head">
         <div>
-          <h2>Select a Service</h2>
-          <p>Choose which campus counter you want to manage.</p>
+          <span class="eyebrow">Counter status</span>
+          <h2 class="heading" id="nowServingTitle">Now <em>serving</em></h2>
         </div>
-
-        <span class="service-count">
-          {{ services|length }} Services
-        </span>
+        <span class="live"><span class="dot dot--live"></span>Live queue</span>
       </div>
 
-      <nav class="queue-tabs" aria-label="Campus services">
-
-        {% for s in services %}
-
-          <a
-            class="queue-tab {{ 'is-active' if s.service_id == selected else '' }}"
-            href="{{ url_for('queue', service=s.service_id) }}"
-            {% if s.service_id == selected %}
-              aria-current="page"
-            {% endif %}
-          >
-
-            <span class="queue-tab__indicator"></span>
-
-            <span class="queue-tab__name">
-              {{ s.service_name }}
-            </span>
-
-            <span class="queue-tab__arrow">→</span>
-
-          </a>
-
-        {% endfor %}
-
-      </nav>
-
-    </section>
-
-
-    <!-- Queue Control Center -->
-    <section class="queue-controls">
-
-      <!-- Now Serving -->
-      <article class="queue-control-card queue-control-card--serving">
-
-        <div class="queue-control-card__header">
+      <div class="console__body">
+        {% if current %}
           <div>
-            <span class="dashboard__eyebrow">COUNTER STATUS</span>
-            <h2>Now Serving</h2>
+            <span class="eyebrow">Current queue number</span>
+            <div class="console__number figure">#{{ current.queue_number }}</div>
           </div>
 
-          <span class="queue-live-indicator">
-            <span></span>
-            LIVE QUEUE
-          </span>
-        </div>
-
-
-        <div class="now-serving-display">
-
-          {% if current %}
-
-            <span class="now-serving-display__label">
-              CURRENT QUEUE NUMBER
-            </span>
-
-            <div class="now-serving-display__number">
-              #{{ current.queue_number }}
-            </div>
-
-            <div class="now-serving-display__student">
-              <span class="now-serving-display__avatar">
-                {{ current.student_name[:1]|upper }}
-              </span>
-
-              <div>
-                <strong>{{ current.student_name }}</strong>
-                <span>Currently being assisted</span>
+          <div class="console__meta">
+            <div class="person">
+              <span class="avatar" aria-hidden="true">{{ current.student_name[:1]|upper }}</span>
+              <div class="person__text">
+                <strong class="person__name">{{ current.student_name }}</strong>
+                <span class="person__meta">Currently being assisted</span>
               </div>
             </div>
 
-            <div class="now-serving-display__counter">
-              <span>Service Counter</span>
+            <div class="console__counter">
+              <span>Service counter</span>
               <strong>{{ current.counter }}</strong>
             </div>
-
-          {% else %}
-
-            <div class="now-serving-empty">
-              <div class="now-serving-empty__icon">◷</div>
-              <h3>No student is being served</h3>
-              <p>
-                The counter is currently available.
-                Call the next student when you're ready.
-              </p>
-            </div>
-
-          {% endif %}
-
-        </div>
-
-
-        <form
-          method="post"
-          action="{{ url_for('queue_call_next', service_id=selected) }}"
-          class="queue-call-form"
-        >
-
-          <button class="btn btn--primary queue-call-button">
-            <span>{{ '✓' if current else '→' }}</span>
-            {{ 'Finish & Call Next' if current else 'Call Next Student' }}
-          </button>
-
-          <p>
-            {% if current %}
-              Complete the current service and proceed to the next student.
-            {% else %}
-              Call the next student waiting in this queue.
-            {% endif %}
-          </p>
-
-        </form>
-
-      </article>
-
-
-      <!-- Add Student -->
-      <article class="queue-control-card queue-control-card--add">
-
-        <div class="queue-control-card__header">
-          <div>
-            <span class="dashboard__eyebrow">QUEUE REGISTRATION</span>
-            <h2>Add Student</h2>
           </div>
+        {% else %}
+          <div class="console__empty">
+            <i class="bi bi-cup-hot" aria-hidden="true"></i>
+            <h3 class="heading">No student is being served</h3>
+            <p>The counter is currently available. Call the next student when you're ready.</p>
+          </div>
+        {% endif %}
+      </div>
 
-          <span class="add-student-icon">+</span>
-        </div>
-
-
-        <p class="queue-add-description">
-          Assign a queue number to a registered student.
-          They'll be added to the selected service.
+      <form method="post" action="{{ url_for('queue_call_next', service_id=selected) }}" class="console__form">
+        <button type="submit" class="btn btn--light btn--lg btn--block">
+          <i class="bi {{ 'bi-check2-circle' if current else 'bi-megaphone' }}" aria-hidden="true"></i>
+          {{ 'Finish & call next' if current else 'Call next student' }}
+        </button>
+        <p>
+          {% if current %}
+            Complete the current service and proceed to the next student.
+          {% else %}
+            Call the next student waiting in this queue.
+          {% endif %}
         </p>
+      </form>
+    </article>
 
+    <!-- Add student -->
+    <article class="glass glass--strong card" aria-labelledby="addStudentTitle">
+      <div class="card__head">
+        <span class="tile tile--blue" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+        <div class="card__head-text">
+          <span class="eyebrow">Queue registration</span>
+          <h2 class="heading" id="addStudentTitle">Add student</h2>
+          <p>Assign a queue number to a registered student. They'll be added to the selected service.</p>
+        </div>
+      </div>
 
-        <form
-          method="post"
-          action="{{ url_for('queue_add') }}"
-          class="queue-add-form"
-        >
+      <form method="post" action="{{ url_for('queue_add') }}">
+        <input type="hidden" name="service_id" value="{{ selected }}">
 
-          <input
-            type="hidden"
-            name="service_id"
-            value="{{ selected }}"
-          >
-
-          <div class="field">
-            <label class="label" for="student_id">
-              Student ID
-            </label>
-
+        <div class="field">
+          <label class="field__label" for="student_id">Student ID</label>
+          <div class="control">
+            <i class="bi bi-person-badge" aria-hidden="true"></i>
             <input
               class="input"
               id="student_id"
@@ -213,181 +132,111 @@
               autocomplete="off"
               required
             >
-
-            <datalist id="student-list">
-              {% for st in students %}
-                <option value="{{ st.student_id }}">{{ st.name }}</option>
-              {% endfor %}
-            </datalist>
-
-            <span class="queue-field-hint">
-              Select a registered student from the suggestions.
-            </span>
           </div>
-
-
-          <button type="submit" class="btn btn--primary queue-add-button">
-            <span>+</span>
-            Assign Queue Number
-          </button>
-
-        </form>
-
-
-        <div class="queue-add-note">
-          <span>ⓘ</span>
-          <p>
-            Student not registered yet?
-            Add their information first through the Students page.
-          </p>
+          <datalist id="student-list">
+            {% for st in students %}
+              <option value="{{ st.student_id }}">{{ st.name }}</option>
+            {% endfor %}
+          </datalist>
+          <span class="field__hint">Select a registered student from the suggestions.</span>
         </div>
 
-      </article>
+        <button type="submit" class="btn btn--primary btn--block">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          Assign queue number
+        </button>
+      </form>
 
-    </section>
-
-
-    <!-- Today's Queue -->
-    <section class="queue-records">
-
-      <div class="queue-section-heading">
-        <div>
-          <span class="dashboard__eyebrow">QUEUE MONITORING</span>
-          <h2>Today's Queue</h2>
-          <p>Monitor student requests and manage their progress.</p>
-        </div>
-
-        <span class="service-count">
-          {{ entries|length }} Entries
+      <div class="note u-mt-sm">
+        <i class="bi bi-info-circle" aria-hidden="true"></i>
+        <span>
+          Student not registered yet?
+          Add their information first through the <a href="{{ url_for('students') }}">Students</a> page.
         </span>
       </div>
+    </article>
 
+  </section>
 
-      <div class="queue-table-container">
-
-        <div class="queue-table-wrap">
-
-          <table class="table queue-table">
-
-            <thead>
-              <tr>
-                <th>Queue No.</th>
-                <th>Student Information</th>
-                <th>Queue Status</th>
-                <th>Update Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-
-              {% for e in entries %}
-
-                <tr class="{{ 'is-current' if e.status == 'serving' else '' }}">
-
-                  <td>
-                    <span class="queue-number-cell">
-                      #{{ e.queue_number }}
-                    </span>
-                  </td>
-
-
-                  <td>
-                    <div class="queue-student-cell">
-
-                      <span class="queue-student-avatar">
-                        {{ e.student_name[:1]|upper }}
-                      </span>
-
-                      <div>
-                        <strong>{{ e.student_name }}</strong>
-                        <span>ID: {{ e.student_id }}</span>
-                      </div>
-
-                    </div>
-                  </td>
-
-
-                  <td>
-                    <span class="queue-status-badge queue-status--{{ e.status|lower|replace(' ', '-') }}">
-                      <span></span>
-                      {{ e.status|replace('_', ' ')|title }}
-                    </span>
-                  </td>
-
-
-                  <td>
-
-                    <form
-                      class="queue-update-form"
-                      method="post"
-                      action="{{ url_for('queue_status', queue_id=e.queue_id) }}"
-                    >
-
-                      <input
-                        type="hidden"
-                        name="service_id"
-                        value="{{ selected }}"
-                      >
-
-                      <select
-                        class="input queue-status-select"
-                        name="status"
-                        aria-label="New status for queue number {{ e.queue_number }}"
-                      >
-
-                        {% for st in statuses %}
-
-                          <option
-                            value="{{ st }}"
-                            {{ 'selected' if st == e.status else '' }}
-                          >
-                            {{ st|replace('_', ' ')|title }}
-                          </option>
-
-                        {% endfor %}
-
-                      </select>
-
-                      <button type="submit" class="btn btn--ghost btn--small">
-                        Update
-                      </button>
-
-                    </form>
-
-                  </td>
-
-                </tr>
-
-              {% else %}
-
-                <tr>
-                  <td colspan="4">
-
-                    <div class="queue-table-empty">
-                      <span>◷</span>
-                      <strong>No students in this queue yet.</strong>
-                      <p>
-                        Students will appear here once they are assigned a queue number.
-                      </p>
-                    </div>
-
-                  </td>
-                </tr>
-
-              {% endfor %}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+  <!-- Today's queue -->
+  <section aria-labelledby="todayTitle">
+    <div class="section-head">
+      <div class="section-head__text">
+        <span class="eyebrow">Queue monitoring</span>
+        <h2 class="section-head__title" id="todayTitle">Today's <em>queue</em></h2>
+        <p class="muted">Monitor student requests and manage their progress.</p>
       </div>
+      <span class="chip">{{ entries|length }} entr{{ 'y' if entries|length == 1 else 'ies' }}</span>
+    </div>
 
-    </section>
+    <div class="table-panel glass">
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Queue no.</th>
+              <th scope="col">Student</th>
+              <th scope="col">Status</th>
+              <th scope="col">Update status</th>
+            </tr>
+          </thead>
 
-  {% endif %}
+          <tbody>
+            {% for e in entries %}
+            <tr class="{{ 'is-current' if e.status == 'serving' else '' }}">
+              <td><span class="ticket-no">#{{ e.queue_number }}</span></td>
 
-</section>
+              <td>
+                <div class="person">
+                  <span class="avatar" aria-hidden="true">{{ e.student_name[:1]|upper }}</span>
+                  <div class="person__text">
+                    <strong class="person__name">{{ e.student_name }}</strong>
+                    <span class="person__meta">ID: {{ e.student_id }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge badge--{{ e.status|lower|replace(' ', '-')|replace('_', '-') }}">
+                  <span class="dot" aria-hidden="true"></span>
+                  {{ e.status|replace('_', ' ')|title }}
+                </span>
+              </td>
+
+              <td>
+                <form class="status-form" method="post" action="{{ url_for('queue_status', queue_id=e.queue_id) }}">
+                  <input type="hidden" name="service_id" value="{{ selected }}">
+
+                  <select class="input input--sm" name="status"
+                          aria-label="New status for queue number {{ e.queue_number }}">
+                    {% for st in statuses %}
+                      <option value="{{ st }}" {{ 'selected' if st == e.status else '' }}>
+                        {{ st|replace('_', ' ')|title }}
+                      </option>
+                    {% endfor %}
+                  </select>
+
+                  <button type="submit" class="btn btn--glass btn--sm">Update</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4">
+                <div class="empty">
+                  <span class="orb orb--sm" aria-hidden="true"><i class="bi bi-hourglass"></i></span>
+                  <h3 class="heading heading--sm">No students in this queue yet</h3>
+                  <p>Students will appear here once they are assigned a queue number.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+{% endif %}
 
 {% endblock %}

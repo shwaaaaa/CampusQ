@@ -1,71 +1,165 @@
 {% extends "base.html" %}
-{% block title %}Staff accounts{% endblock %}
+
+{% block title %}Staff Accounts | CampusQ{% endblock %}
+
 {% block content %}
-<div class="page-head">
-  <div>
-    <h1>Staff accounts</h1>
-    <p class="muted">Create a login for another staff member. They only see the services of their own department.</p>
+
+<header class="page-header">
+  <div class="page-header__text">
+    <span class="eyebrow">Admin · Access</span>
+    <h1 class="title">Staff <em>accounts</em></h1>
+    <p class="lead">Create a login for another staff member. They only see the services of their own department.</p>
   </div>
+  <span class="orb" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
+</header>
+
+<div class="grid grid--main">
+
+  <!-- New account -->
+  <section class="glass glass--strong card card--lg" aria-labelledby="newStaffTitle">
+    <div class="card__head">
+      <span class="tile tile--blue" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+      <div class="card__head-text">
+        <span class="eyebrow">New login</span>
+        <h2 class="heading" id="newStaffTitle">New staff account</h2>
+        <p>All fields are required.</p>
+      </div>
+    </div>
+
+    <form method="post">
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label" for="name">Full name</label>
+          <input class="input" id="name" name="name" value="{{ form.get('name', '') }}" required autofocus>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="department">Department</label>
+          <input class="input" id="department" name="department" value="{{ form.get('department', '') }}"
+                 list="dept-list" placeholder="e.g. Registrar" autocomplete="off" required>
+          <datalist id="dept-list">
+            {% for d in departments %}<option value="{{ d }}">{% endfor %}
+          </datalist>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="username">Username</label>
+        <div class="control">
+          <i class="bi bi-at" aria-hidden="true"></i>
+          <input class="input" id="username" name="username" value="{{ form.get('username', '') }}"
+                 autocomplete="off" required>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label" for="password">Password</label>
+          <div class="control">
+            <i class="bi bi-key" aria-hidden="true"></i>
+            <input class="input" id="password" name="password" type="password"
+                   minlength="8" autocomplete="new-password" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="confirm">Confirm password</label>
+          <div class="control">
+            <i class="bi bi-key" aria-hidden="true"></i>
+            <input class="input" id="confirm" name="confirm" type="password"
+                   minlength="8" autocomplete="new-password" required>
+          </div>
+        </div>
+      </div>
+
+      <label class="switch">
+        <input type="checkbox" name="is_admin" {{ 'checked' if form.get('is_admin') else '' }}>
+        <span>
+          <strong>Make this an admin</strong>
+          Can manage services and staff, and sees every department.
+        </span>
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block">
+        Create staff account
+        <span class="btn__icon" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+      </button>
+    </form>
+  </section>
+
+  <!-- Tips -->
+  <aside class="stack">
+    <section class="glass glass--deep welcome-card">
+      <span class="orb" aria-hidden="true"><i class="bi bi-shield-lock"></i></span>
+      <span class="eyebrow">Before you create</span>
+      <h2>Keep access <em>tidy.</em></h2>
+      <p>Each account only sees the services of its own department, unless it's an admin.</p>
+    </section>
+
+    <section class="glass card">
+      <h2 class="heading heading--sm">Account <em>rules</em></h2>
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">01</span>
+          <div>
+            <strong>Password length</strong>
+            <p>At least 8 characters.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__num">02</span>
+          <div>
+            <strong>Department spelling</strong>
+            <p>Use the same spelling as the Services page so the right services show up.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  </aside>
 </div>
 
-<div class="card card--narrow">
-  <h2 class="card__title">New staff account</h2>
-  <form method="post">
-    <div class="field">
-      <label class="label" for="name">Full name</label>
-      <input class="input" id="name" name="name" value="{{ form.get('name', '') }}" required autofocus>
+<!-- Existing accounts -->
+<section aria-labelledby="existingTitle">
+  <div class="section-head">
+    <div class="section-head__text">
+      <span class="eyebrow">Directory</span>
+      <h2 class="section-head__title" id="existingTitle">Existing <em>accounts</em></h2>
     </div>
-    <div class="field">
-      <label class="label" for="department">Department</label>
-      <input class="input" id="department" name="department" value="{{ form.get('department', '') }}"
-             list="dept-list" placeholder="e.g. Registrar" autocomplete="off" required>
-      <datalist id="dept-list">
-        {% for d in departments %}<option value="{{ d }}">{% endfor %}
-      </datalist>
-    </div>
-    <div class="field">
-      <label class="label" for="username">Username</label>
-      <input class="input" id="username" name="username" value="{{ form.get('username', '') }}"
-             autocomplete="off" required>
-    </div>
-    <div class="field">
-      <label class="label" for="password">Password</label>
-      <input class="input" id="password" name="password" type="password"
-             minlength="8" autocomplete="new-password" required>
-    </div>
-    <div class="field">
-      <label class="label" for="confirm">Confirm password</label>
-      <input class="input" id="confirm" name="confirm" type="password"
-             minlength="8" autocomplete="new-password" required>
-    </div>
-    <label class="check">
-      <input type="checkbox" name="is_admin" {{ 'checked' if form.get('is_admin') else '' }}>
-      <span>Make this an admin (can manage services and staff, and sees every department)</span>
-    </label>
-    <button class="btn btn--primary">Create staff account</button>
-    <p class="hint">Password: at least 8 characters. Use the same department spelling as the Services page so the right services show up.</p>
-  </form>
-</div>
+    <span class="chip">{{ staff|length }} account{{ '' if staff|length == 1 else 's' }}</span>
+  </div>
 
-<h2 class="section-title">Existing accounts</h2>
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr><th>Name</th><th>Username</th><th>Department</th><th>Role</th></tr>
-    </thead>
-    <tbody>
-    {% for m in staff %}
-      <tr>
-        <td>{{ m.name }}</td>
-        <td>{{ m.username }}</td>
-        <td>{{ m.department or '' }}</td>
-        <td>
-          {% if m.is_admin %}<span class="badge badge--active">Admin</span>
-          {% else %}<span class="badge">Staff</span>{% endif %}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
+  <div class="table-panel glass">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Username</th>
+            <th scope="col">Department</th>
+            <th scope="col">Role</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for m in staff %}
+          <tr>
+            <td>
+              <div class="person">
+                <span class="avatar" aria-hidden="true">{{ m.name[:1]|upper if m.name else '?' }}</span>
+                <strong class="person__name">{{ m.name }}</strong>
+              </div>
+            </td>
+            <td><span class="mono">{{ m.username }}</span></td>
+            <td>{{ m.department or '' }}</td>
+            <td>
+              {% if m.is_admin %}<span class="badge badge--admin"><i class="bi bi-stars" aria-hidden="true"></i>Admin</span>
+              {% else %}<span class="badge">Staff</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 {% endblock %}

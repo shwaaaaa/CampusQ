@@ -1,27 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Services{% endblock %}
-{% block content %}
-<div class="page-head">
-  <div>
-    <h1>Services</h1>
-    <p class="muted">Set up what each department offers. Staff only see the services of their own department.</p>
-  </div>
-</div>
 
-<div class="card">
+{% block title %}Services | CampusQ{% endblock %}
+
+{% block content %}
+
+<header class="page-header">
+  <div class="page-header__text">
+    <span class="eyebrow">Admin · Configuration</span>
+    <h1 class="title">Campus <em>services</em></h1>
+    <p class="lead">Set up what each department offers. Staff only see the services of their own department.</p>
+  </div>
+  <span class="orb" aria-hidden="true"><i class="bi bi-building"></i></span>
+</header>
+
+<!-- Service form -->
+<section class="glass glass--strong card card--lg" id="serviceFormCard" aria-labelledby="serviceFormTitle">
+  <div class="card__head">
+    <span class="tile tile--blue" aria-hidden="true"><i class="bi bi-sliders"></i></span>
+    <div class="card__head-text">
+      <span class="eyebrow">Service details</span>
+      <h2 class="heading" id="serviceFormTitle">Add or edit a service</h2>
+      <p>Select a service in the table to edit or archive it.</p>
+    </div>
+  </div>
+
   <form method="post">
     <input type="hidden" id="f_id" name="service_id">
+
     <div class="form-grid form-grid--3">
       <div class="field">
-        <label class="label" for="f_name">Service name</label>
+        <label class="field__label" for="f_name">Service name</label>
         <input class="input" id="f_name" name="service_name" placeholder="e.g. Transcript request">
       </div>
+
       <div class="field">
-        <label class="label" for="f_counter">Counter</label>
-        <input class="input" id="f_counter" name="counter" placeholder="Window 1">
+        <label class="field__label" for="f_counter">Counter</label>
+        <input class="input" id="f_counter" name="counter" placeholder="e.g. Window 1">
       </div>
+
       <div class="field">
-        <label class="label" for="f_dept">Department</label>
+        <label class="field__label" for="f_dept">Department</label>
         <input class="input" id="f_dept" name="department" list="dept-list" placeholder="e.g. Registrar" autocomplete="off">
         <datalist id="dept-list">
           {% for d in departments %}<option value="{{ d }}">{% endfor %}
@@ -29,62 +47,131 @@
       </div>
     </div>
 
-    <div class="actions">
-      <button class="btn btn--primary" formaction="{{ url_for('service_add') }}">Add service</button>
-      <button class="btn btn--ghost" formaction="{{ url_for('service_update') }}">Save changes</button>
-      <button class="btn btn--ghost" id="f_toggle" formaction="{{ url_for('service_archive') }}">Archive</button>
-      <button type="button" class="btn btn--ghost" onclick="clearForm()">Clear</button>
+    <div class="form-actions">
+      <div class="form-actions__group">
+        <button class="btn btn--primary" formaction="{{ url_for('service_add') }}">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          Add service
+        </button>
+        <button class="btn btn--glass" formaction="{{ url_for('service_update') }}">
+          <i class="bi bi-check2" aria-hidden="true"></i>
+          Save changes
+        </button>
+      </div>
+
+      <div class="form-actions__group">
+        <button class="btn btn--ghost" formaction="{{ url_for('service_archive') }}">
+          <i class="bi bi-archive" id="f_toggle_icon" aria-hidden="true"></i>
+          <span id="f_toggle">Archive</span>
+        </button>
+        <button type="button" class="btn btn--ghost" onclick="clearForm()">
+          <i class="bi bi-eraser" aria-hidden="true"></i>
+          Clear
+        </button>
+      </div>
     </div>
-    <p class="hint">Select a service in the table to edit or archive it. Archiving hides it from the queue and the student pages but keeps its history.</p>
+
+    <div class="note u-mt-sm">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <span>Archiving hides a service from the queue and the student pages but keeps its history.</span>
+    </div>
   </form>
-</div>
+</section>
 
-<h2 class="section-title">All services</h2>
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr><th>Service</th><th>Counter</th><th>Department</th><th>Status</th></tr>
-    </thead>
-    <tbody>
-    {% for s in services %}
-      <tr class="is-clickable" tabindex="0"
-          data-id="{{ s.service_id }}" data-name="{{ s.service_name }}"
-          data-counter="{{ s.counter or '' }}" data-dept="{{ s.department or '' }}"
-          data-archived="{{ s.archived }}"
-          onclick="loadRow(this)" onkeydown="if (event.key === 'Enter') loadRow(this)">
-        <td>{{ s.service_name }}</td>
-        <td>{{ s.counter or '' }}</td>
-        <td>
-          {% if s.department %}{{ s.department }}
-          {% else %}<span class="badge badge--waiting">No department</span>{% endif %}
-        </td>
-        <td>
-          {% if s.archived %}<span class="badge badge--cancelled">Archived</span>
-          {% else %}<span class="badge badge--active">Active</span>{% endif %}
-        </td>
-      </tr>
-    {% else %}
-      <tr><td colspan="4" class="muted">No services yet. Add the first one above.</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
-<p class="hint">Services with no department are only visible to admins until you assign one.</p>
+<!-- All services -->
+<section aria-labelledby="allServicesTitle">
+  <div class="section-head">
+    <div class="section-head__text">
+      <span class="eyebrow">Directory</span>
+      <h2 class="section-head__title" id="allServicesTitle">All <em>services</em></h2>
+      <p class="muted">Services with no department are only visible to admins until you assign one.</p>
+    </div>
+    <span class="chip">{{ services|length }} service{{ '' if services|length == 1 else 's' }}</span>
+  </div>
 
+  <div class="table-panel glass">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Service</th>
+            <th scope="col">Counter</th>
+            <th scope="col">Department</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="sr-only">Select</span></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in services %}
+          <tr class="table__row--clickable" tabindex="0" role="button"
+              aria-label="Edit {{ s.service_name }}"
+              data-id="{{ s.service_id }}" data-name="{{ s.service_name }}"
+              data-counter="{{ s.counter or '' }}" data-dept="{{ s.department or '' }}"
+              data-archived="{{ s.archived }}"
+              onclick="loadRow(this)"
+              onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); loadRow(this); }">
+            <td>
+              <div class="person">
+                <span class="tile tile--sm" aria-hidden="true"><i class="bi bi-building"></i></span>
+                <strong class="person__name">{{ s.service_name }}</strong>
+              </div>
+            </td>
+            <td>{{ s.counter or '' }}</td>
+            <td>
+              {% if s.department %}{{ s.department }}
+              {% else %}<span class="badge badge--waiting">No department</span>{% endif %}
+            </td>
+            <td>
+              {% if s.archived %}<span class="badge badge--archived"><i class="bi bi-archive" aria-hidden="true"></i>Archived</span>
+              {% else %}<span class="badge badge--active"><span class="dot" aria-hidden="true"></span>Active</span>{% endif %}
+            </td>
+            <td><span class="table__action">Edit<i class="bi bi-pencil" aria-hidden="true"></i></span></td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5">
+              <div class="empty">
+                <span class="orb orb--sm" aria-hidden="true"><i class="bi bi-building-add"></i></span>
+                <h3 class="heading heading--sm">No services yet</h3>
+                <p>Add the first one using the form above.</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
 <script>
+function setToggle(archived) {
+  document.getElementById('f_toggle').textContent = archived ? 'Restore' : 'Archive';
+  document.getElementById('f_toggle_icon').className = archived ? 'bi bi-arrow-counterclockwise' : 'bi bi-archive';
+}
+
 function loadRow(tr) {
   document.getElementById('f_id').value = tr.dataset.id;
   document.getElementById('f_name').value = tr.dataset.name;
   document.getElementById('f_counter').value = tr.dataset.counter;
   document.getElementById('f_dept').value = tr.dataset.dept;
-  document.getElementById('f_toggle').textContent = tr.dataset.archived === '1' ? 'Restore' : 'Archive';
-  document.querySelectorAll('tr.is-selected').forEach(r => r.classList.remove('is-selected'));
+  setToggle(['1', 'true', 'True'].indexOf(tr.dataset.archived) !== -1);
+
+  document.querySelectorAll('tr.is-selected').forEach(function (r) { r.classList.remove('is-selected'); });
   tr.classList.add('is-selected');
+
+  document.getElementById('serviceFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 function clearForm() {
-  ['f_id', 'f_name', 'f_counter', 'f_dept'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f_toggle').textContent = 'Archive';
-  document.querySelectorAll('tr.is-selected').forEach(r => r.classList.remove('is-selected'));
+  ['f_id', 'f_name', 'f_counter', 'f_dept'].forEach(function (id) {
+    document.getElementById(id).value = '';
+  });
+  setToggle(false);
+  document.querySelectorAll('tr.is-selected').forEach(function (r) { r.classList.remove('is-selected'); });
 }
 </script>
 {% endblock %}

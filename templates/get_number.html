@@ -1,192 +1,171 @@
-
 {% extends "base.html" %}
 
 {% block title %}Get a Queue Number | CampusQ{% endblock %}
 
 {% block content %}
-<div class="student-panel">
 
-    <!-- WELCOME HEADER -->
-    <div class="student-welcome">
-        <div class="student-welcome-content">
-            <span class="student-eyebrow">STUDENT PORTAL</span>
-            <h1>Skip the Line.<br><span>Not Your Turn.</span></h1>
-            <p>
-                Welcome to CampusQ! Get your queue number, monitor your
-                position, and make your campus transactions easier.
-            </p>
-        </div>
+<!-- Welcome -->
+<section class="stage hero">
+  <span class="watermark" aria-hidden="true">CampusQ</span>
 
-        <div class="student-welcome-icon">
-            <i class="bi bi-people-fill"></i>
-        </div>
+  <div class="hero__text">
+    <span class="chip"><i class="bi bi-mortarboard" aria-hidden="true"></i>Student portal</span>
+    <h1 class="display">Skip the line.<br><em>Not your turn.</em></h1>
+    <p class="lead">
+      Welcome to CampusQ! Get your queue number, monitor your
+      position, and make your campus transactions easier.
+    </p>
+  </div>
+
+  <div class="hero__art" aria-hidden="true">
+    <span class="orb orb--lg"><i class="bi bi-people-fill"></i></span>
+    <span class="chip hero__chip--a"><span class="dot dot--live"></span>Live queue</span>
+    <span class="chip hero__chip--b"><i class="bi bi-ticket-perforated"></i>Numbers in seconds</span>
+  </div>
+</section>
+
+<div class="grid grid--main">
+
+  <!-- Get a queue number -->
+  <section class="glass glass--strong card card--lg" aria-labelledby="getNumberTitle">
+    <div class="card__head">
+      <span class="tile tile--blue" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></span>
+      <div class="card__head-text">
+        <span class="eyebrow">Join the queue</span>
+        <h2 class="heading" id="getNumberTitle">Get a queue number</h2>
+        <p>Enter your student information to get started.</p>
+      </div>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="student-panel-grid">
-
-        <!-- GET QUEUE NUMBER -->
-        <div class="student-main-card">
-            <div class="student-card-heading">
-                <div class="student-card-icon">
-                    <i class="bi bi-ticket-perforated-fill"></i>
-                </div>
-
-                <div>
-                    <span class="student-card-eyebrow">JOIN THE QUEUE</span>
-                    <h2>Get a Queue Number</h2>
-                    <p>Enter your student information to get started.</p>
-                </div>
-            </div>
-
-            <form method="post" class="student-queue-form">
-
-                <div class="student-field">
-                    <label for="student_id">
-                        <i class="bi bi-person-badge"></i>
-                        Student ID
-                    </label>
-
-                    <input
-                        type="text"
-                        id="student_id"
-                        name="student_id"
-                        placeholder="e.g. 2024-0001"
-                        autocomplete="off"
-                        required
-                        autofocus
-                    >
-
-                    <small>Use your registered university student ID.</small>
-                </div>
-
-                <div class="student-field">
-                    <label for="service_id">
-                        <i class="bi bi-building"></i>
-                        Select a Service
-                    </label>
-
-                    <select id="service_id" name="service_id" required>
-                        <option value="" disabled selected>
-                            Choose the service you need
-                        </option>
-
-                        {% for s in services %}
-                        <option value="{{ s.service_id }}">
-                            {{ s.service_name }} — {{ s.counter }}
-                        </option>
-                        {% endfor %}
-                    </select>
-
-                    <small>Select the office or service you want to visit.</small>
-                </div>
-
-                <button type="submit" class="student-submit-btn">
-                    <span>Get Queue Number</span>
-                    <i class="bi bi-arrow-right"></i>
-                </button>
-            </form>
-
-            <div class="student-form-note">
-                <i class="bi bi-info-circle"></i>
-                Please make sure your Student ID is correct before proceeding.
-            </div>
+    <form method="post">
+      <div class="field">
+        <label class="field__label" for="student_id">Student ID</label>
+        <div class="control">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <input
+            class="input"
+            type="text"
+            id="student_id"
+            name="student_id"
+            placeholder="e.g. 2500800"
+            autocomplete="off"
+            required
+            autofocus
+          >
         </div>
+        <span class="field__hint">Use your registered university student ID.</span>
+      </div>
 
-        <!-- SIDE PANEL -->
-        <div class="student-side-panel">
-
-            <!-- CHECK QUEUE -->
-            <div class="student-side-card">
-                <div class="student-side-heading">
-                    <div class="student-side-icon">
-                        <i class="bi bi-search"></i>
-                    </div>
-
-                    <div>
-                        <h3>Already have a number?</h3>
-                        <p>Check your current queue status.</p>
-                    </div>
-                </div>
-
-                <form method="get" action="{{ url_for('my_queue') }}">
-                    <label for="check_student_id">Student ID</label>
-
-                    <div class="student-check-input">
-                        <input
-                            type="text"
-                            id="check_student_id"
-                            name="student_id"
-                            placeholder="Enter your Student ID"
-                            required
-                        >
-
-                        <button type="submit" aria-label="Check queue">
-                            <i class="bi bi-arrow-right"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- HOW IT WORKS -->
-            <div class="student-side-card student-guide-card">
-                <span class="student-card-eyebrow">QUICK GUIDE</span>
-                <h3>How it works</h3>
-
-                <div class="student-guide-steps">
-                    <div class="student-guide-step">
-                        <div class="student-step-number">01</div>
-                        <div>
-                            <strong>Enter your Student ID</strong>
-                            <p>Use your registered university ID.</p>
-                        </div>
-                    </div>
-
-                    <div class="student-guide-step">
-                        <div class="student-step-number">02</div>
-                        <div>
-                            <strong>Choose a service</strong>
-                            <p>Select the office you need to visit.</p>
-                        </div>
-                    </div>
-
-                    <div class="student-guide-step">
-                        <div class="student-step-number">03</div>
-                        <div>
-                            <strong>Get your queue number</strong>
-                            <p>Keep your number and monitor your turn.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+      <div class="field">
+        <label class="field__label" for="service_id">Service</label>
+        <div class="control">
+          <i class="bi bi-building" aria-hidden="true"></i>
+          <select class="input" id="service_id" name="service_id" required>
+            <option value="" disabled selected>Choose the service you need</option>
+            {% for s in services %}
+            <option value="{{ s.service_id }}">{{ s.service_name }} — {{ s.counter }}</option>
+            {% endfor %}
+          </select>
         </div>
+        <span class="field__hint">Select the office or service you want to visit.</span>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--block">
+        Get queue number
+        <span class="btn__icon" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+      </button>
+    </form>
+
+    <div class="note u-mt-sm">
+      <i class="bi bi-info-circle" aria-hidden="true"></i>
+      <span>Please make sure your Student ID is correct before proceeding.</span>
     </div>
+  </section>
 
-    <!-- BOTTOM LINKS -->
-    <div class="student-bottom-links">
-        <a href="{{ url_for('register') }}" class="student-bottom-link">
-            <div class="student-bottom-icon">
-                <i class="bi bi-person-plus"></i>
-            </div>
-            <div>
-                <strong>New Student?</strong>
-                <span>Register your information</span>
-            </div>
-            <i class="bi bi-chevron-right student-link-arrow"></i>
-        </a>
+  <!-- Side panel -->
+  <aside class="stack">
 
-        <a href="{{ url_for('board') }}" class="student-bottom-link">
-            <div class="student-bottom-icon">
-                <i class="bi bi-display"></i>
-            </div>
-            <div>
-                <strong>Now Serving Board</strong>
-                <span>View the currently served numbers</span>
-            </div>
-            <i class="bi bi-chevron-right student-link-arrow"></i>
-        </a>
-    </div>
+    <!-- Check an existing number -->
+    <section class="glass card" aria-labelledby="checkTitle">
+      <div class="card__head">
+        <span class="tile" aria-hidden="true"><i class="bi bi-search"></i></span>
+        <div class="card__head-text">
+          <h2 class="heading heading--sm" id="checkTitle">Already have a number?</h2>
+          <p>Check your current queue status.</p>
+        </div>
+      </div>
 
+      <form method="get" action="{{ url_for('my_queue') }}">
+        <label class="sr-only" for="check_student_id">Student ID</label>
+        <div class="control control--action">
+          <i class="bi bi-person-badge" aria-hidden="true"></i>
+          <input
+            class="input"
+            type="text"
+            id="check_student_id"
+            name="student_id"
+            placeholder="Enter your Student ID"
+            required
+          >
+          <button type="submit" class="control__btn" aria-label="Check queue">
+            <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- How it works -->
+    <section class="glass card" aria-labelledby="guideTitle">
+      <span class="eyebrow">Quick guide</span>
+      <h2 class="heading heading--sm u-mt-xs" id="guideTitle">How it <em>works</em></h2>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">01</span>
+          <div>
+            <strong>Enter your Student ID</strong>
+            <p>Use your registered university ID.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__num">02</span>
+          <div>
+            <strong>Choose a service</strong>
+            <p>Select the office you need to visit.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step__num">03</span>
+          <div>
+            <strong>Get your queue number</strong>
+            <p>Keep your number and monitor your turn.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+  </aside>
 </div>
+
+<!-- More links -->
+<div class="grid grid--2 u-mt">
+  <a href="{{ url_for('register') }}" class="link-card glass">
+    <span class="tile" aria-hidden="true"><i class="bi bi-person-plus"></i></span>
+    <span class="link-card__text">
+      <strong>New student?</strong>
+      <span>Register your information</span>
+    </span>
+    <span class="corner" aria-hidden="true"><i class="bi bi-arrow-up-right"></i></span>
+  </a>
+
+  <a href="{{ url_for('board') }}" class="link-card glass">
+    <span class="tile" aria-hidden="true"><i class="bi bi-display"></i></span>
+    <span class="link-card__text">
+      <strong>Now serving board</strong>
+      <span>View the currently served numbers</span>
+    </span>
+    <span class="corner" aria-hidden="true"><i class="bi bi-arrow-up-right"></i></span>
+  </a>
+</div>
+
 {% endblock %}
